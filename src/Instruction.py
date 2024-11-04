@@ -7,8 +7,21 @@ class Instruction:
         self.started = False
     
     def print_instruction(self):
-        pass
+        raise NotImplementedError('Must be implemented in subclasses')
 
+    def latency(self):
+        if self.op in ['+', '-']:
+            return 1
+        elif self.op == '*':
+            return 2
+        elif self.op in ['LOAD', 'Store']:
+            return 3
+        else:
+            return 1
+    
+    def log_status(self):
+        raise NotImplementedError('Must be implemented in subclasses')
+        
 # Load/Store Instruction Class
 class LoadStoreInstruction(Instruction):
     def __init__(self, dest, operation):
@@ -16,6 +29,13 @@ class LoadStoreInstruction(Instruction):
     
     def print_instruction(self):
         print(f"{self.dest} = {self.op}")
+    
+    def log_status(self):
+        if self.op == 'LOAD':
+            status = (f"Instruction {self.dest} = {self.op}    | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.complete_cycle}")
+        elif self.op == 'STORE':
+            status = (f"Instruction {self.dest} = {self.op}   | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.complete_cycle}")
+        return status
 
 # Three-Register Instruction Class
 class ThreeRegInstruction(Instruction):
@@ -26,3 +46,7 @@ class ThreeRegInstruction(Instruction):
         
     def print_instruction(self):
         print(f"{self.dest} = {self.src1} {self.op} {self.src2}")
+    
+    def log_status(self):
+        status = (f"Instruction {self.dest} = {self.src1} {self.op} {self.src2} | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.complete_cycle}")
+        return status 

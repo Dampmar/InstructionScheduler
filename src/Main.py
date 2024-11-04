@@ -1,6 +1,7 @@
 import os 
 from FileParser import read_file
 from Instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
+from SingleInOrder import SingleInOrder
 
 def main():
     filename = "instructions.asm"
@@ -16,6 +17,20 @@ def main():
     print("Input instructions")
     for inst in instructions:
         inst.print_instruction()
+
+    print("Single Instruction (in-order) Scheduler:")
+    single_sched = SingleInOrder()
+    for instr in instructions:
+        single_sched.addInstruction(instr)
+    
+    single_sched.run()
+
+    # Print the log 
+    for entry in single_sched.log:
+        print(entry)
+    
+
+
 
 if __name__ == "__main__":
     main()
