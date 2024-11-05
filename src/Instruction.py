@@ -14,7 +14,7 @@ class Instruction:
             return 1
         elif self.op == '*':
             return 2
-        elif self.op in ['LOAD', 'Store']:
+        elif self.op in ['LOAD', 'STORE']:
             return 3
         else:
             return 1
