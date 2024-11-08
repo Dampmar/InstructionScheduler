@@ -4,12 +4,12 @@
 
 import os 
 from parser import read_file
-from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
+from instructions import Instruction, LoadStoreInstruction, ThreeRegInstruction
 from single import SingleInOrder
-from superscalar import SuperscalarInOrder
+from super import SuperscalarInOrder
 
 def main():
-    filename = input("Enter the filename (in 'test' folder): ")
+    filename = "book.asm"
     test_folderpath = "test"
     current_dir = os.path.dirname(os.path.abspath(__file__))
     test_dir = os.path.join(os.path.dirname(current_dir), test_folderpath)

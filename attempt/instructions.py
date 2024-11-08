@@ -1,5 +1,4 @@
 class Instruction:
-    # Overlapping properties in instruction types
     def __init__(self, dest, op):
         self.dest = dest
         self.op = op 
@@ -7,33 +6,28 @@ class Instruction:
         self.exp_completion = None 
         self.started = False 
         self.retired_cycle : int = 0 
-
-    # Print method should be defined based on instruction type 
+    
     def print_instruction(self):
-        raise NotImplementedError("Must be implemented in subclass")
-
-    # Latencies of instructions based on operation type 
+        raise NotImplementedError("Implemented in subclass")
+    
     def latency(self):
         if self.op in ['+', '-']:
-            return 1
-            # return 2 used to test with class examples
-        elif self.op == '*':
             return 2
-            # return 3 used to test with class examples 
+            return 1
+        elif self.op == '*':
+            return 3 
+            return 2
         elif self.op in ['LOAD', 'STORE']:
             return 3
         else:
-            raise NotImplementedError("Invalid instruction type")
+            raise NotImplementedError("Invalid instructions type")
     
-    # Log status of instruction, what is logged to display the results 
     def log_status(self):
-        raise NotImplementedError("Must be implemented in subclass")
+        raise NotImplementedError("Implemented in subclass")
     
-    # Method to retire instructions called in scheduler's 
-    def retire(self, cycle):
+    def retire(self, cycle: int):
         self.retired_cycle = cycle
 
-# Load/Store Instruction format => R1 = LOAD, etc...
 class LoadStoreInstruction(Instruction):
     def __init__(self, dest, operation):
         super().__init__(dest, operation)
@@ -45,7 +39,6 @@ class LoadStoreInstruction(Instruction):
         status = (f'Instruction {self.dest} = {self.op} | Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
         return status 
 
-# Three Register Instructions [+,-,*] format => R1 = R2 + R3, etc...
 class ThreeRegInstruction(Instruction):
     def __init__(self, dest, operation, src1, src2):
         super().__init__(dest, operation)
