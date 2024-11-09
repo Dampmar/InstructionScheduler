@@ -7,6 +7,7 @@ from parser import read_file
 from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
 from single import SingleInOrder
 from superscalar import SuperscalarInOrder
+from superscalar_out_order import SuperscalarOutOrder
 
 def main():
     filename = input("Enter the filename (in 'test' folder): ")
@@ -34,13 +35,21 @@ def main():
         print(entry)
     
     print("Superscalar (in-order) Scheduler: ")
-    super_sched = SuperscalarInOrder(functional_units=4, max_issue=2)
+    super_sched = SuperscalarInOrder(functional_units=8, max_issue=2)
     for instr in instructions:
         super_sched.add_instruction(instr)
     
     super_sched.run()
 
     for entry in super_sched.logger:
+        print(entry)
+
+    print("Superscalar (out of order) Scheduler: ")
+    super_scheduler = SuperscalarOutOrder(functional_units=4, max_issue=2)
+    for instr in instructions:
+        super_scheduler.add_instruction(instr)
+    super_scheduler.run()
+    for entry in super_scheduler.logger:
         print(entry)
     
 
