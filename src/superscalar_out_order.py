@@ -59,6 +59,24 @@ class SuperscalarOutOrder(InstructionScheduler):
         if self.check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
             return False
         
+        # Still check dependencies with other pending instructions 
+        for instr in self.pending_instructions:
+            if instr == instruction:
+                break
+            else:
+                if isinstance(instruction, ThreeRegInstruction):
+                    if instr.dest in [instruction.src1, instruction.src2]:
+                        return False
+                # WAR Dependency: Writing to a register that is being read by another instruction
+                if isinstance(instr, ThreeRegInstruction):
+                    if instruction.dest in [instr.src1, instr.src2]:
+                        return False
+
+                # WAW Dependency: Writing to a register that another instruction is writing to
+                if instruction.dest == instr.dest:
+                    return False
+
+        
         return True
 
     def check_dependencies(self, instruction, other_instructions):
