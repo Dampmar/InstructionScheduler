@@ -2,7 +2,7 @@ from scheduler import InstructionScheduler, DependencyType
 from instruction import Instruction, ThreeRegInstruction, LoadStoreInstruction
 
 class SuperscalarOutOrder(InstructionScheduler):
-    def __init__(self, functional_units=4, max_issue=2):
+    def __init__(self, functional_units, max_issue):
         super().__init__(functional_units)
         self.max_issue_per_cycle = max_issue
         self.pending_instructions = []
@@ -11,56 +11,66 @@ class SuperscalarOutOrder(InstructionScheduler):
         attempted_issues = 0
 
         # Try to issue pending instructions first from the pending instructions list
-
         for pending in self.pending_instructions[:]:
+            # Check capacity
             if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
+                # Check if the pending instruction is ready to execute, dependencies have been resolved
                 if self.__is_ready_to_execute_from_pending_instructions(pending):
+                    # Schedule the instruction
                     pending.issue_cycle = self.current_cycle
                     pending.exp_completion = self.current_cycle + pending.latency()
                     pending.started = True 
                     self.instructions_in_progress.append(pending)
                     self.pending_instructions.remove(pending)
-                    attempted_issues+=1
-                    print("issuing")
-                
-        # Issue new instructions from the main list if there is still capacity
+                    attempted_issues += 1 
+        
+        # Try to issue new instructions that haven't been overlooked before
         for instruction in self.instructions[:]:
+            # Check capacity
             if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
                 attempted_issues += 1
+                # Check if it can be scheduled
                 if self.__is_ready_to_execute_from_instructions(instruction):
+                    # Schedule the instruction
                     instruction.issue_cycle = self.current_cycle
                     instruction.exp_completion = self.current_cycle + instruction.latency()
                     instruction.started = True
                     self.instructions_in_progress.append(instruction)
                     self.instructions.remove(instruction)
-                    print("issuing")
                 else:
+                    # Else, add it to pending instructions to wait for dependencies to resolve
                     self.pending_instructions.append(instruction)
                     self.instructions.remove(instruction)
-                    print("pending")
     
     def __is_ready_to_execute_from_instructions(self, instruction):
         """
-        Checks if the given instruction is ready to execute. 
-        It needs to check for dependencies with both in-progress and pending instructions.
+        To schedule an instruction from the main instruction list, it shouldn't have any dependencies with any past instructions, thus it has to revise both in-progress and pending instructions
+        This manages to encompass the proper behavior of the program while taking advantage of the out-of-order scheduling
         """
+
         # Check for dependencies against currently executing instructions
         if self.check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
             return False
-
-        # Check for dependencies against other pending instructions
+        
+        # Check for dependencies agaisnt the pending instructions
         if self.check_dependencies(instruction, self.pending_instructions) != DependencyType.NONE:
             return False
-        
-        return True
-    
+
+        return True 
+
     def __is_ready_to_execute_from_pending_instructions(self, instruction):
-        # Check for dependencies against currently executing instructions
+        """
+        To schedule an instruction from the pending instructions list you have to check for dependencies with the in progress instructions, and you also have to revise that the instruction doesn't interfere with the logic of instructions that come before it. 
+            - It shouldn't write to a register before past instructions write to that same register
+            - It shouldn't write to a register before past instructions read from that same register
+        These two cases would break the logic due to altering the end results of procedures, thus we must revise them
+        """
         if self.check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
             return False
         
-        # Still check dependencies with other pending instructions 
+        # Check for data handling hazards, from the cases stated above 
         for instr in self.pending_instructions:
+            # Should check instructions before itself, this leads to this behavior 
             if instr == instruction:
                 break
             else:
@@ -75,10 +85,9 @@ class SuperscalarOutOrder(InstructionScheduler):
                 # WAW Dependency: Writing to a register that another instruction is writing to
                 if instruction.dest == instr.dest:
                     return False
-
         
-        return True
-
+        return True 
+    
     def check_dependencies(self, instruction, other_instructions):
         """ Check if the given instruction has any unresolved dependencies """
         for instr in other_instructions:
@@ -98,7 +107,9 @@ class SuperscalarOutOrder(InstructionScheduler):
         return DependencyType.NONE
     
     def _retire_instructions(self):
-        """ Retire instructions once they are completed and have no unresolved dependencies """
+        """
+        In charge of retiring out of order
+        """
         i = 0
         while i < len(self.instructions_in_progress):
             instr = self.instructions_in_progress[i]
@@ -110,7 +121,7 @@ class SuperscalarOutOrder(InstructionScheduler):
                 i += 1
 
     def __can_retire_instructions(self, instruction):
-        """Determine if the instruction can retire without conflicts."""
+        """Determine if the instruction can retire without conflicts"""
         for instr in self.instructions_in_progress:
             if instr.issue_cycle < instruction.issue_cycle:
                 # Check for WAW and WAR hazards, before retiring
@@ -122,8 +133,7 @@ class SuperscalarOutOrder(InstructionScheduler):
         
         return True 
     
-    # Run while instructions being processed 
+    # Overritten method since, pending instructions also influence the continuiation of the program
     def run(self):
         while self.instructions or self.instructions_in_progress or self.pending_instructions:
             self.execute_cycle()
-        print("done")
