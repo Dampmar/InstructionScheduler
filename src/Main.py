@@ -8,6 +8,7 @@ from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
 from single import SingleInOrder
 from superscalar import SuperscalarInOrder
 from superscalar_out_order import SuperscalarOutOrder
+from superrenaming import SuperscalarInOrder_Renaming
 
 def main():
     filename = input("Enter the filename (in 'test' folder): ")
@@ -49,6 +50,14 @@ def main():
     for instr in instructions:
         super_scheduler.add_instruction(instr)
     super_scheduler.run()
+    for entry in super_scheduler.logger:
+        print(entry)
+    
+    print("Superscalar (in-order) Scheduler with renaming")
+    superscalar = SuperscalarInOrder_Renaming(functional_units=8, max_issue=2, num_physical_regs=8)
+    for instr in instructions:
+        superscalar.add_instruction(instr)
+    superscalar.run()
     for entry in super_scheduler.logger:
         print(entry)
     

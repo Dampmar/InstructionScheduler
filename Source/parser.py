@@ -1,4 +1,4 @@
-from instructions import Instruction, LoadStoreInstruction, ThreeRegInstruction
+from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
 
 # file_parser class 
 def read_file(filename):
@@ -42,5 +42,6 @@ def read_file(filename):
     # Handling file not found error 
     except FileNotFoundError:
         print(f'File "filename" not found.')
+        exit(1)
     
     return instructions
