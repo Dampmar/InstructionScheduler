@@ -4,11 +4,11 @@ from instruction import Instruction, ThreeRegInstruction, LoadStoreInstruction
 class SingleInOrder(InstructionScheduler):
     def __init__(self, functional_units=1):
         super().__init__(functional_units)
-    
+
     def schedule(self):
-        # Check if there are functional units ope, and if there are instructions to issue, else wait
+        # Check if there are functional units available to process instruction and if there are instructions to execute, else wait 
         if len(self.instructions_in_progress) < self.functional_units and self.instructions:
-            # Get an instruction from the top of the instructions list and schedule it 
+            # Get first instruction and try and schedule it 
             issued_instruction = self.instructions[0]
             if self.__is_ready_to_execute(issued_instruction):
                 # Set the issue_cycle and the expected_completion
@@ -21,32 +21,29 @@ class SingleInOrder(InstructionScheduler):
 
                 # Remove the instructions 
                 self.instructions.remove(issued_instruction)
+                    
 
     def __is_ready_to_execute(self, instruction):
         return self._check_dependencies(instruction) == DependencyType.NONE
-    
+
     def _check_dependencies(self, instruction):
         for instr in self.instructions_in_progress:
-            # RAW: if current instruction uses a source being written to by an executing instruction
-            if (isinstance(instruction, ThreeRegInstruction)):
+            # RAW: if current instruction uses a register being written by an executing instruction
+            if isinstance(instruction, ThreeRegInstruction):
                 if instr.dest in [instruction.src1, instruction.src2]:
                     return DependencyType.RAW
             
-            if instruction.op == "STORE":
-                if instr.dest == instruction.dest:
-                    return DependencyType.RAW
-            
-            # WAR: if current instruction writes to a register being used as a source by another instr
+            # WAR: If current instruction writes to a register being read by an executing instruction 
             if isinstance(instr, ThreeRegInstruction):
                 if instruction.dest in [instr.src1, instr.src2]:
                     return DependencyType.WAR
             
-            # WAW: if current instruction writes to a register being written by an executing instruction
+            # WAW: If current instruction writes to a register being written by an executing instruction
             if instruction.dest == instr.dest:
                 return DependencyType.WAW
         
         return DependencyType.NONE
-
+    
     def _retire_instructions(self):
         # Completed instructions 
         completed = []
@@ -63,3 +60,4 @@ class SingleInOrder(InstructionScheduler):
         # Officially remove those instructions from in progress 
         for instr in completed:
             self.instructions_in_progress.remove(instr)
+

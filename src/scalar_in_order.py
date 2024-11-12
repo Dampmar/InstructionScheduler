@@ -1,27 +1,29 @@
 from scheduler import InstructionScheduler, DependencyType
 from instruction import Instruction, ThreeRegInstruction, LoadStoreInstruction
 
-class SingleInOrder(InstructionScheduler):
-    def __init__(self, functional_units=1):
+class SuperscalarInOrder(InstructionScheduler):
+    def __init__(self, functional_units=4, max_issue=2):
         super().__init__(functional_units)
+        self.max_issue_per_cycle = max_issue
     
     def schedule(self):
-        # Check if there are functional units ope, and if there are instructions to issue, else wait
-        if len(self.instructions_in_progress) < self.functional_units and self.instructions:
-            # Get an instruction from the top of the instructions list and schedule it 
-            issued_instruction = self.instructions[0]
-            if self.__is_ready_to_execute(issued_instruction):
-                # Set the issue_cycle and the expected_completion
-                issued_instruction.issue_cycle = self.current_cycle
-                issued_instruction.exp_completion = self.current_cycle + issued_instruction.latency()
-                issued_instruction.started = True
-
-                # Append the instructions to the instructions_in_progress of the scheduler
-                self.instructions_in_progress.append(issued_instruction)
-
-                # Remove the instructions 
-                self.instructions.remove(issued_instruction)
-
+        """
+        This method is fairly similar to that in 'single.py' yet it just allows for iteration of the same process a 'max_issue_per_cycle' number of times,
+        unless an instruction that is being issued can't be scheduled
+        """
+        attempted_issues = 0
+        for instruction in self.instructions[:]:
+            if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
+                attempted_issues += 1
+                if self.__is_ready_to_execute(instruction):
+                    instruction.issue_cycle = self.current_cycle 
+                    instruction.exp_completion = self.current_cycle + instruction.latency()
+                    instruction.started = True 
+                    self.instructions_in_progress.append(instruction)
+                    self.instructions.remove(instruction)
+                else:
+                    break
+    
     def __is_ready_to_execute(self, instruction):
         return self._check_dependencies(instruction) == DependencyType.NONE
     
@@ -46,7 +48,7 @@ class SingleInOrder(InstructionScheduler):
                 return DependencyType.WAW
         
         return DependencyType.NONE
-
+    
     def _retire_instructions(self):
         # Completed instructions 
         completed = []
@@ -54,8 +56,8 @@ class SingleInOrder(InstructionScheduler):
         # Check for completed instructions 
         for instr in self.instructions_in_progress:
             if self.current_cycle >= instr.exp_completion:
-                instr.retire(self.current_cycle)                # Retire instruction
-                self.logger.append(f"{instr.log_status()}")     # Log the status 
+                instr.retire(self.current_cycle)            # Retire instruction
+                self.logger.append(f"{instr.log_status()}")    # Log the status 
                 completed.append(instr)
             else:
                 break

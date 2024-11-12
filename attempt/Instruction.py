@@ -1,29 +1,30 @@
 class Instruction:
+    # Overlapping properties in instruction types
     def __init__(self, dest, op):
         self.dest = dest
-        self.op = op
-        self.issue_cycle = None 
+        self.op = op 
+        self.issue_cycle = None
         self.exp_completion = None 
         self.started = False 
         self.retired_cycle : int = 0 
-    
+
     # Print method should be defined based on instruction type 
     def print_instruction(self):
         raise NotImplementedError("Must be implemented in subclass")
-    
+
     # Latencies of instructions based on operation type 
     def latency(self):
         if self.op in ['+', '-']:
-            #return 1
-            return 2 #used to test with class examples
+            return 1
+            #return 2 # used to test with class examples
         elif self.op == '*':
-            #return 2
-            return 3 #used to test with class examples 
+            return 2
+            #return 3 # used to test with class examples 
         elif self.op in ['LOAD', 'STORE']:
             return 3
         else:
             raise NotImplementedError("Invalid instruction type")
-        
+    
     # Log status of instruction, what is logged to display the results 
     def log_status(self):
         raise NotImplementedError("Must be implemented in subclass")
@@ -32,7 +33,7 @@ class Instruction:
     def retire(self, cycle):
         self.retired_cycle = cycle
 
-# Load/Store Instruction format => R1 = LOAD, R2 = STORE, etc...
+# Load/Store Instruction format => R1 = LOAD, etc...
 class LoadStoreInstruction(Instruction):
     def __init__(self, dest, operation):
         super().__init__(dest, operation)
@@ -40,16 +41,8 @@ class LoadStoreInstruction(Instruction):
     def print_instruction(self):
         print(f"{self.dest} = {self.op}")
     
-    # Special case for store to allow for the same format
-    def update_register(self, renaming_rules):
-        if self.dest in renaming_rules:
-            self.dest = renaming_rules[self.dest]
-        
     def log_status(self):
-        if self.op == "LOAD":
-            status = (f'Instruction {self.dest} = {self.op}    | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
-        else:
-            status = (f'Instruction {self.dest} = {self.op}   | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
+        status = (f'Instruction {self.dest} = {self.op} | Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
         return status 
 
 # Three Register Instructions [+,-,*] format => R1 = R2 + R3, etc...
@@ -65,10 +58,3 @@ class ThreeRegInstruction(Instruction):
     def log_status(self):
         status = (f"Instruction {self.dest} = {self.src1} {self.op} {self.src2} | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}")
         return status 
-    
-    # Update the registers based on the renaming rules 
-    def update_registers(self, renaming_rules):
-        if self.src1 in renaming_rules:
-            self.src1 = renaming_rules[self.src1]
-        if self.src2 in renaming_rules:
-            self.src2 = renaming_rules[self.src2]
