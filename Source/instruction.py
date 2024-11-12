@@ -15,10 +15,10 @@ class Instruction:
     def latency(self):
         if self.op in ['+', '-']:
             return 1
-            # return 2 used to test with class examples
+            #return 2 #used to test with class examples
         elif self.op == '*':
             return 2
-            # return 3 used to test with class examples 
+            #return 3 #used to test with class examples 
         elif self.op in ['LOAD', 'STORE']:
             return 3
         else:

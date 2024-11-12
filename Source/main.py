@@ -4,7 +4,9 @@ from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
 from single_rename import SingleInOrder_Renaming
 from single import SingleInOrder
 from scalar_in_order import SuperscalarInOrder
+from scalar_in_order_rename import SuperscalarInOrder_Renaming
 from scalar_out_order import SuperscalarOutOrder
+
 
 def main():
     filename = input("Enter the filename (in 'test' folder): ")
@@ -46,15 +48,27 @@ def main():
     instructions = read_file(filePath)
     
     print("\nSuperscalar (in-order) Scheduler:")
-    super_sched = SuperscalarInOrder(functional_units=4, max_issue=2)
+    superscalar_inorder_sched = SuperscalarInOrder(functional_units=4, max_issue=2)
     for instr in instructions:
-        super_sched.add_instruction(instr)
+        superscalar_inorder_sched.add_instruction(instr)
     
-    super_sched.run()
+    superscalar_inorder_sched.run()
 
-    for entry in super_sched.logger:
+    for entry in superscalar_inorder_sched.logger:
         print(entry)
     
+    # Instructions retrieval
+    instructions = read_file(filePath)
+    print("\nSuperscalar (in-order) with Renaming Scheduler:")
+    superscalar_inorder_renaming_sched = SuperscalarInOrder_Renaming(functional_units=4, max_issue=2)
+    for instr in instructions:
+        superscalar_inorder_renaming_sched.add_instruction(instr)
+    
+    superscalar_inorder_renaming_sched.run()
+    for entry in superscalar_inorder_renaming_sched.logger:
+        print(entry)
+
+
     # Instructions retrieval 
     instructions = read_file(filePath)
     
@@ -65,6 +79,8 @@ def main():
     super_scheduler.run()
     for entry in super_scheduler.logger:
         print(entry)
+
+    
 
 
 if __name__ == "__main__":
