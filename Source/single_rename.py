@@ -21,7 +21,9 @@ class SingleInOrder_Renaming(InstructionScheduler):
         if (isinstance(instruction, ThreeRegInstruction)):
             instruction.update_registers(self.renaming_rules.rename_map)
         
-        if instruction.dest in self.renaming_rules.rename_map:
+        if (instruction.op == "STORE"):
+            instruction.update_register(self.renaming_rules.rename_map)
+        elif instruction.dest in self.renaming_rules.rename_map:
             self.renaming_rules.remove_rule(instruction.dest)
         
         return self._check_dependencies(instruction) == DependencyType.NONE
@@ -42,7 +44,36 @@ class SingleInOrder_Renaming(InstructionScheduler):
         # Officially remove those instructions from in progress 
         for instr in completed:
             self.instructions_in_progress.remove(instr)
-            
+    
+    def _check_dependencies(self, instruction):
+        for instr in self.instructions_in_progress:
+            # RAW Dependency (Read-After-Write)
+            if isinstance(instruction, ThreeRegInstruction):
+                if instr.dest in [instruction.src1, instruction.src2]:
+                    return DependencyType.RAW
+        
+            # For STORE instructions, treat the 'dest' register as a source
+            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
+                if instr.dest == instruction.dest:
+                    return DependencyType.RAW  # Reading from a register that is being written to by another instruction
+
+            # WAR Dependency (Write-After-Read) - try to solve with renaming
+            if isinstance(instr, ThreeRegInstruction):
+                if instruction.dest in [instr.src1, instr.src2]:
+                    if not self.renaming_rules.create_rule(instruction.dest):
+                        return DependencyType.WAR
+                    else:
+                        instruction.dest = self.renaming_rules.rename_map[instruction.dest]
+        
+            # WAW Dependency (Write-After-Write) - try to solve with renaming
+            if instruction.op != "STORE" and instruction.dest == instr.dest:
+                if not self.renaming_rules.create_rule(instruction.dest):
+                    return DependencyType.WAW
+                else:
+                    instruction.dest = self.renaming_rules.rename_map[instruction.dest]
+    
+        return DependencyType.NONE
+    """
     def _check_dependencies(self, instruction):
         for instr in self.instructions_in_progress:
             # RAW is unsolvable
@@ -66,6 +97,7 @@ class SingleInOrder_Renaming(InstructionScheduler):
                     instruction.dest = self.renaming_rules.rename_map[instruction.dest]
                 
         return DependencyType.NONE
+    """
     
 
         

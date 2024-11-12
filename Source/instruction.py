@@ -40,8 +40,16 @@ class LoadStoreInstruction(Instruction):
     def print_instruction(self):
         print(f"{self.dest} = {self.op}")
     
+    # Special case for store to allow for the same format
+    def update_register(self, renaming_rules):
+        if self.dest in renaming_rules:
+            self.dest = renaming_rules[self.dest]
+        
     def log_status(self):
-        status = (f'Instruction {self.dest} = {self.op} | Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
+        if self.op == "LOAD":
+            status = (f'Instruction {self.dest} = {self.op}    | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
+        else:
+            status = (f'Instruction {self.dest} = {self.op}   | Issue Cycle = {self.issue_cycle} | Retired Cycle = {self.retired_cycle}')
         return status 
 
 # Three Register Instructions [+,-,*] format => R1 = R2 + R3, etc...

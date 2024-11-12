@@ -63,7 +63,7 @@ def main():
     superscalar_inorder_renaming_sched = SuperscalarInOrder_Renaming(functional_units=4, max_issue=2)
     for instr in instructions:
         superscalar_inorder_renaming_sched.add_instruction(instr)
-    
+
     superscalar_inorder_renaming_sched.run()
     for entry in superscalar_inorder_renaming_sched.logger:
         print(entry)

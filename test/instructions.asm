@@ -9,3 +9,4 @@ R3 = R3 * R1
 R1 = R4 + R4
 R1 = LOAD
 R1 = STORE
+R2 = R1 + R4
