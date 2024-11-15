@@ -6,6 +6,7 @@ from rename_single import SingleInOrder_Renaming
 from scalar_in_order import SuperscalarInOrder
 from rename_scalar_in_order import SuperscalarInOrder_Renaming
 from scalar_out_order import SuperscalarOutOrder
+from rename_scalar_out_order import SuperscalarOutOrder_Renaming
 
 def main():
     filename = input("Enter the filename (in 'test' folder): ")
@@ -72,6 +73,18 @@ def main():
 
     print("\nSuperscalar (out of order) Scheduler:")
     single = SuperscalarOutOrder(functional_units=3, max_issue=2)
+    for instr in instructions:
+        single.add_instruction(instr)
+    
+    single.run()
+    for entry in single.logger:
+        print(entry)
+
+    # Instructions Retrieval
+    instructions = read_file(filePath)
+
+    print("\nSuperscalar (out of order) with Renaming Scheduler:")
+    single = SuperscalarOutOrder_Renaming(functional_units=8, max_issue=2)
     for instr in instructions:
         single.add_instruction(instr)
     
