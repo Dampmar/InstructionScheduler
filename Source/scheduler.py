@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from instruction import Instruction
 
 # Enum type for describing types of dependencies
 class DependencyType(Enum):
@@ -28,7 +29,6 @@ class InstructionScheduler:
     # Execute a cycle, increment, check for possible retirements, and schedule instructions
     def execute_cycle(self):
         self.current_cycle += 1
-        #self._retire_instructions()
         self.schedule()
         self._retire_instructions()
 
@@ -36,3 +36,10 @@ class InstructionScheduler:
     def run(self):
         while self.instructions or self.instructions_in_progress:
             self.execute_cycle()
+    
+    # Method to schedule instructions 
+    def _schedule_instruction(self, instr : Instruction):
+        instr.issue_cycle = self.current_cycle
+        instr.exp_completion = self.current_cycle + instr.latency()
+        instr.started = True 
+        self.instructions_in_progress.append(instr)

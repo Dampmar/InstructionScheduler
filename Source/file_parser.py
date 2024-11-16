@@ -1,7 +1,7 @@
-from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
+from load_store import LoadStoreInstruction
+from three_reg import ThreeRegInstruction
 
-# file_parser class 
-def read_file(filename):
+def file_reader(filename):
     instructions = []
     try:
         # Parsing the instructions into a list

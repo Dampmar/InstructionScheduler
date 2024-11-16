@@ -22,7 +22,7 @@ class SuperscalarOutOrder(InstructionScheduler):
                     pending.started = True 
                     self.instructions_in_progress.append(pending)
                     self.pending_instructions.remove(pending)
-                    attempted_issues += 1
+                    #attempted_issues += 1
         
         # Try to issue new instructions that haven't been overlooked before
         for instruction in self.instructions[:]:
@@ -104,7 +104,7 @@ class SuperscalarOutOrder(InstructionScheduler):
             # WAR Dependency Checking 
             if isinstance(instr, ThreeRegInstruction) and instruction.dest in [instr.src1, instr.src2]:
                 return DependencyType.WAR
-            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
+            if isinstance(instruction, LoadStoreInstruction) and instr.op == "STORE":
                 if instr.dest == instruction.dest:
                     return DependencyType.WAR
             

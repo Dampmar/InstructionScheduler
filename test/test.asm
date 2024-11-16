@@ -1,8 +1,9 @@
-R3 = R0 * R1
-R1 = R0 + R2
 R5 = R0 + R1
 R6 = LOAD
+R6 = STORE
+R6 = R1 + R2
 R1 = R0 + R1
 R0 = R3 + R2
 R3 = R2 + R6
 R2 = R4 + R7
+R6 = LOAD

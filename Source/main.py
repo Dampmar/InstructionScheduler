@@ -1,12 +1,11 @@
 import os
-from parser import read_file
-from instruction import Instruction, LoadStoreInstruction, ThreeRegInstruction
-from single_rename import SingleInOrder_Renaming
+from file_parser import file_reader
 from single import SingleInOrder
 from scalar_in_order import SuperscalarInOrder
-from scalar_in_order_rename import SuperscalarInOrder_Renaming
 from scalar_out_order import SuperscalarOutOrder
-
+from rename_single import SingleInOrder_Renaming
+from rename_scalar_in_order import SuperscalarInOrder_Renaming
+from rename_scalar_out_order import SuperscalarOutOrder_Renaming
 
 def main():
     filename = input("Enter the filename (in 'test' folder): ")
@@ -16,13 +15,13 @@ def main():
     filePath = os.path.join(test_dir, filename)
 
     # Instructions retrieval 
-    instructions = read_file(filePath)
+    instructions = file_reader(filePath)
 
-    # Checking that instructions are being properly parsed 
-    print("Input instructions")
+    # Checking that instructions are being properly parsed
+    print("Input instructions:")
     for inst in instructions:
         inst.print_instruction()
-    
+
     print("Single Instruction (in-order) Scheduler:")
     single = SingleInOrder(functional_units=3)
     for instr in instructions:
@@ -31,57 +30,66 @@ def main():
     single.run()
     for entry in single.logger:
         print(entry)
-
-    # Instructions retrieval 
-    instructions = read_file(filePath)
-
-    print("\nSingle Instruction (in-order) with Renaming Scheduler:")
-    single_sched = SingleInOrder_Renaming(functional_units=4)
-    for instr in instructions:
-        single_sched.add_instruction(instr)
-
-    single_sched.run()
-    for entry in single_sched.logger:
-        print(entry)
     
-    # Instructions retrieval 
-    instructions = read_file(filePath)
-    
+    # Instructions Retrieval
+    instructions = file_reader(filePath)
+
     print("\nSuperscalar (in-order) Scheduler:")
-    superscalar_inorder_sched = SuperscalarInOrder(functional_units=4, max_issue=2)
+    single = SuperscalarInOrder(functional_units=3, max_issue=2)
     for instr in instructions:
-        superscalar_inorder_sched.add_instruction(instr)
+        single.add_instruction(instr)
     
-    superscalar_inorder_sched.run()
+    single.run()
+    for entry in single.logger:
+        print(entry)
 
-    for entry in superscalar_inorder_sched.logger:
+    # Instructions Retrieval
+    instructions = file_reader(filePath)
+
+    print("\nSuperscalar (out-of-order) Scheduler:")
+    single = SuperscalarOutOrder(functional_units=3, max_issue=2)
+    for instr in instructions:
+        single.add_instruction(instr)
+    
+    single.run()
+    for entry in single.logger:
         print(entry)
     
-    # Instructions retrieval
-    instructions = read_file(filePath)
+    # Instructions Retrieval
+    instructions = file_reader(filePath)
+
+    print("\nSingle (in-order) with Renaming Scheduler:")
+    single = SingleInOrder_Renaming(functional_units=3)
+    for instr in instructions:
+        single.add_instruction(instr)
+    
+    single.run()
+    for entry in single.logger:
+        print(entry)
+    
+    # Instructions Retrieval
+    instructions = file_reader(filePath)
+
     print("\nSuperscalar (in-order) with Renaming Scheduler:")
-    superscalar_inorder_renaming_sched = SuperscalarInOrder_Renaming(functional_units=4, max_issue=2)
+    single = SuperscalarInOrder_Renaming(functional_units=3, max_issue=2)
     for instr in instructions:
-        superscalar_inorder_renaming_sched.add_instruction(instr)
-
-    superscalar_inorder_renaming_sched.run()
-    for entry in superscalar_inorder_renaming_sched.logger:
+        single.add_instruction(instr)
+    
+    single.run()
+    for entry in single.logger:
         print(entry)
 
+    # Instructions Retrieval
+    instructions = file_reader(filePath)
 
-    # Instructions retrieval 
-    instructions = read_file(filePath)
-    
-    print("\nSuperscalar (out of order) Scheduler: ")
-    super_scheduler = SuperscalarOutOrder(functional_units=4, max_issue=2)
+    print("\nSuperscalar (out of order) with Renaming Scheduler:")
+    single = SuperscalarOutOrder_Renaming(functional_units=8, max_issue=2)
     for instr in instructions:
-        super_scheduler.add_instruction(instr)
-    super_scheduler.run()
-    for entry in super_scheduler.logger:
-        print(entry)
-
+        single.add_instruction(instr)
     
-
+    single.run()
+    for entry in single.logger:
+        print(entry)
 
 if __name__ == "__main__":
     main()

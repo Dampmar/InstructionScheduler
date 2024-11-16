@@ -1,5 +1,7 @@
 from scheduler import InstructionScheduler, DependencyType
-from instruction import Instruction, ThreeRegInstruction, LoadStoreInstruction
+from instruction import Instruction
+from load_store import LoadStoreInstruction
+from three_reg import ThreeRegInstruction
 from rules import RenamingRules
 
 class SuperscalarOutOrder_Renaming(InstructionScheduler):
@@ -8,46 +10,39 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
         self.max_issue_per_cycle = max_issue
         self.pending_instructions = []
         self.renaming_rules = RenamingRules()
-    
+
     def schedule(self):
         attempted_issues = 0
-
-        # Try to issue pending instructions first from the pending instructions list 
+        # Try to issue pending instructions first from the pending instructions list
         for pending in self.pending_instructions[:]:
             # Check capacity
             if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
+                # Check if the pending instruction is ready to execute, dependencies have been resolved
                 if self.__is_ready_to_execute_from_pending_instructions(pending):
                     # Schedule the instruction
-                    pending.issue_cycle = self.current_cycle
-                    pending.exp_completion = self.current_cycle + pending.latency()
-                    pending.started = True 
-                    self.instructions_in_progress.append(pending)
+                    self._schedule_instruction(pending)
                     self.pending_instructions.remove(pending)
-                    #attempted_issues += 1
         
-        # Try to issue new instructions
+        # Try to issue new instructions that haven't been overlooked before
         for instruction in self.instructions[:]:
-            # Check capacity 
+            # Check capacity
             if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
                 attempted_issues += 1
+                # Check if it can be scheduled
                 if self.__is_ready_to_execute_from_instructions(instruction):
-                    instruction.issue_cycle = self.current_cycle
-                    instruction.exp_completion = self.current_cycle + instruction.latency()
-                    instruction.started = True 
-                    self.instructions_in_progress.append(instruction)
+                    # Schedule the instruction 
+                    self._schedule_instruction(instruction)
                     self.instructions.remove(instruction)
                 else:
+                    # Else, add it to pending instructions to wait for dependencies to resolve
                     self.pending_instructions.append(instruction)
                     self.instructions.remove(instruction)
-    
+        
     def __is_ready_to_execute_from_instructions(self, instruction):
         # Apply Renaming Rules
-        if (isinstance(instruction, ThreeRegInstruction)):
-            instruction.update_registers(self.renaming_rules.rename_map)
+        instruction.update_registers(self.renaming_rules.rename_map)
 
-        if (instruction.op == "STORE"):
-            instruction.update_register(self.renaming_rules.rename_map)
-        elif instruction.dest in self.renaming_rules.rename_map:
+        if instruction.dest in self.renaming_rules.rename_map and instruction.op != "STORE":
             self.renaming_rules.remove_rule(instruction.dest)
         
         # Check dependencies with pending instructions first
@@ -99,10 +94,16 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
                 # WAR Dependency Checking 
                 if isinstance(instr, ThreeRegInstruction):
                     if instruction.dest in [instr.src1, instr.src2]:
-                        return False
-                if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
+                        if not self.renaming_rules.create_rule(instruction.dest):
+                            return False
+                        else:
+                            instruction.dest = self.renaming_rules.rename_map[instruction.dest]
+                if instr.op == "STORE":
                     if instr.dest == instruction.dest:
-                        return False
+                        if not self.renaming_rules.create_rule(instruction.dest):
+                            return False
+                        else:
+                            instruction.dest = self.renaming_rules.rename_map[instruction.dest]
                 
                 # WAW Dependency Checking 
                 if instruction.dest == instr.dest:
@@ -137,6 +138,11 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
                         return DependencyType.WAR
                     else:
                         instruction.dest = self.renaming_rules.rename_map[instruction.dest]
+            if instr.op == "STORE" and instr.dest == instruction.dest:
+                if not self.renaming_rules.create_rule(instruction.dest):
+                    return DependencyType.WAR
+                else:
+                    instruction.dest = self.renaming_rules.rename_map[instruction.dest]
         
             # WAW Dependency (Write-After-Write) - try to solve with renaming
             if instruction.op != "STORE" and instruction.dest == instr.dest:
@@ -146,7 +152,7 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
                     instruction.dest = self.renaming_rules.rename_map[instruction.dest]
     
         return DependencyType.NONE
-    
+
     def _retire_instructions(self):
         i = 0 
         while i < len(self.instructions_in_progress):
