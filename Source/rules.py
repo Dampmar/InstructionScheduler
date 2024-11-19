@@ -1,12 +1,13 @@
+"""This class is in charge of holding, creating and removing the renaming rules for schedulers"""
 class RenamingRules:
     def __init__(self, max_registers=8):
         # Store the mapping of logical registers to physical registers
         self.rename_map = {}
         self.max_registers = max_registers
-        self.available_physical_regs = set([f"S{i}" for i in range(0, max_registers)])  # Available physical registers
+        self.available_physical_regs = set([f"S{i}" for i in range(0, max_registers)])  # Available hidden registers
     
     def create_rule(self, logical_register):
-        """Create a renaming rule by assigning a physical register to the logical register."""
+        """Create a renaming rule by assigning a hidden register to the logicalregister."""
         if logical_register not in self.rename_map:
             if not self.available_physical_regs:
                 return False  # No available physical registers

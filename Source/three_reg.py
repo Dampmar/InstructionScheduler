@@ -4,9 +4,10 @@ from instruction import Instruction
 class ThreeRegInstruction(Instruction):
     def __init__(self, dest, operation, src1, src2):
         super().__init__(dest, operation)
-        self.src1 = src1
-        self.src2 = src2 
+        self.src1 = src1                    # Adding Source Register 1
+        self.src2 = src2                    # Adding Source Register 2
     
+    # Printing instructions for debugging 
     def print_instruction(self):
         print(f"{self.dest} = {self.src1} {self.op} {self.src2}")
     

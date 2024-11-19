@@ -7,10 +7,11 @@ from rules import RenamingRules
 class SuperscalarInOrder_Renaming(InstructionScheduler):
     def __init__(self, functional_units=4, max_issue=2):
         super().__init__(functional_units)
-        self.max_issue_per_cycle = max_issue
-        self.renaming_rules = RenamingRules()
+        self.max_issue_per_cycle = max_issue                # Issue Slots
+        self.renaming_rules = RenamingRules()               # Renaming Rules
     
     def schedule(self):
+        """Same format as the one with no renaming"""
         attempted_issues = 0
         for instruction in self.instructions[:]:
             if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
@@ -22,6 +23,7 @@ class SuperscalarInOrder_Renaming(InstructionScheduler):
                     break
 
     def __is_ready_to_execute(self, instr : Instruction):
+        """Method has been modified to update registers, based on renmaing rules; and remove rules that no longer apply"""
         instr.update_registers(self.renaming_rules.rename_map)
 
         if instr.op != "STORE" and instr.dest in self.renaming_rules.rename_map:
@@ -43,7 +45,7 @@ class SuperscalarInOrder_Renaming(InstructionScheduler):
 
             # WAR Dependency (Write-After-Read) - try to solve with renaming
             if isinstance(instr, ThreeRegInstruction):
-                if instruction.dest in [instr.src1, instr.src2]:
+                if instruction.dest in [instr.src1, instr.src2] and instruction.op != "STORE":
                     if not self.renaming_rules.create_rule(instruction.dest):
                         return DependencyType.WAR
                     else:

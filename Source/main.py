@@ -5,7 +5,7 @@ from scalar_in_order import SuperscalarInOrder
 from scalar_out_order import SuperscalarOutOrder
 from rename_single import SingleInOrder_Renaming
 from rename_scalar_in_order import SuperscalarInOrder_Renaming
-from rename_scalar_out_order import SuperscalarOutOrder_Renaming
+from scalar_out_rename import SuperscalarOutOrder_Renaming
 
 def main():
     filename = input("Enter the filename (in 'test' folder): ")

@@ -16,7 +16,9 @@ class SingleInOrder(InstructionScheduler):
                 self._schedule_instruction(instr)
                 self.instructions.remove(instr)
     
+    # Method for checking if an instruction is ready to evaluate 
     def __is_ready_to_execute(self, instruction):
+        # Should only evaluate if there are no dependencies
         return self.__check_dependencies(instruction) == DependencyType.NONE
     
     def __check_dependencies(self, instruction):
@@ -34,13 +36,15 @@ class SingleInOrder(InstructionScheduler):
             # WAW (write-after-write) Dependency Checking
             if instruction.dest == instr.dest:
                 return DependencyType.WAW
-
+        
+        # No dependencies, return NONE
         return DependencyType.NONE
     
     def _retire_instructions(self):
         # Check for completed instructions 
         for instr in self.instructions_in_progress[:]:
             if self.current_cycle >= instr.exp_completion:
+                # Retire the instructions, log it and remove the instruction
                 instr.retire(self.current_cycle)
                 self.logger.append(f"{instr.log_status()}")
                 self.instructions_in_progress.remove(instr)

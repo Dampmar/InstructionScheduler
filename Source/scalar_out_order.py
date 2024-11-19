@@ -6,8 +6,8 @@ from load_store import LoadStoreInstruction
 class SuperscalarOutOrder(InstructionScheduler):
     def __init__(self, functional_units, max_issue):
         super().__init__(functional_units)
-        self.max_issue_per_cycle = max_issue
-        self.pending_instructions = []
+        self.max_issue_per_cycle = max_issue            # Issue slots available
+        self.pending_instructions = []                  # Pending instructions list 
     
     def schedule(self):
         attempted_issues = 0
@@ -17,7 +17,7 @@ class SuperscalarOutOrder(InstructionScheduler):
             if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
                 # Check if the pending instruction is ready to execute, dependencies have been resolved
                 if self.__is_ready_to_execute_from_pending_instructions(pending):
-                    # Schedule the instruction
+                    # Schedule the instruction, and remove it from the list 
                     self._schedule_instruction(pending)
                     self.pending_instructions.remove(pending)
 
@@ -28,18 +28,20 @@ class SuperscalarOutOrder(InstructionScheduler):
                 attempted_issues += 1
                 # Check if it can be scheduled
                 if self.__is_ready_to_execute_from_instructions(instruction):
-                    # Schedule the instruction 
+                    # Schedule the instruction and remove it from the list
                     self._schedule_instruction(instruction)
                     self.instructions.remove(instruction)
                 else:
-                    # Else, add it to pending instructions to wait for dependencies to resolve
+                    # Add it to pending instructions to wait for dependencies to resolve
                     self.pending_instructions.append(instruction)
                     self.instructions.remove(instruction)
     
     def __is_ready_to_execute_from_instructions(self, instruction):
         """
-        To check an instruction from the main list:
-            1. It shouldn't have any dependencies with any past instruction, has to revise both in-progress and pending instructions
+        To check if an instruction from the main list can be issued:
+            1. It shouldn't have any dependencies with in-progress instructions
+            2. It shouldn't have any dependencies with pending instructions
+        This checking prevents data hazards from propagating or for instructions to be performed without the correct values
         """
         if self.__check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
             return False
@@ -59,7 +61,7 @@ class SuperscalarOutOrder(InstructionScheduler):
         if self.__check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
             return False
         
-        # Check for data handling hazards, from the cases stated above
+        # Different Format since it should only check instructions that came before itself
         for instr in self.pending_instructions:
             if instr == instruction:
                 break
@@ -86,6 +88,7 @@ class SuperscalarOutOrder(InstructionScheduler):
         
         return True
 
+    # Check data dependencies between instruction and list of instructions
     def __check_dependencies(self, instruction, list_of_instructions):
         for instr in list_of_instructions:
             # RAW Dependency Checking 
@@ -108,6 +111,12 @@ class SuperscalarOutOrder(InstructionScheduler):
         return DependencyType.NONE
 
     def _retire_instructions(self):
+        """
+        This method is in charge of retiring instructions out of order, achieves this by:
+            1. Iterating through all instructions in progress.
+            2. Checking if the instruction is modifying a register that is being read to or written by past instructions (This would break the programs desired functionality).
+            3. If not, it may retire.
+        """
         i = 0 
         while i < len(self.instructions_in_progress):
             instr = self.instructions_in_progress[i]
@@ -128,6 +137,7 @@ class SuperscalarOutOrder(InstructionScheduler):
             
         return True 
 
+    # Overwritten method, we must check that pending instructions are also scheduled and completed.
     def run(self):
         while self.instructions or self.instructions_in_progress or self.pending_instructions:
             self.execute_cycle()
