@@ -41,7 +41,7 @@ def file_reader(filename):
 
     # Handling file not found error 
     except FileNotFoundError:
-        print(f'File "filename" not found.')
+        print(f'File "filename" not found, terminating program.')
         exit(1)
     
     return instructions

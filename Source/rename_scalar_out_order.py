@@ -43,117 +43,75 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
         # Apply Renaming Rules
         instruction.update_registers(self.renaming_rules.rename_map)
 
+        # Remove renaming rule if write register is there 
         if instruction.dest in self.renaming_rules.rename_map and instruction.op != "STORE":
             self.renaming_rules.remove_rule(instruction.dest)
+
+        # Check dependencies with pending instructions first 
+        if self._check_dependencies(instruction, self.pending_instructions) != DependencyType.NONE:
+            return False
         
-        # Check dependencies with pending instructions first
-        for instr in self.pending_instructions:
-            # Raw Dependency Checking 
-            if isinstance(instruction, ThreeRegInstruction) and instr.dest in [instruction.src1, instruction.src2] and instr.op != "STORE":
-                return False
-            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE" and instr.dest == instruction.dest and instr.op != "STORE":
-                return False
-            
-            # WAR Dependency Checking 
-            if isinstance(instr, ThreeRegInstruction) and instruction.dest in [instr.src1, instr.src2] and instruction.op != "STORE":
-                if not self.renaming_rules.create_rule(instruction.dest):
-                    return False
-                else:
-                    instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-            if instr.op == "STORE" and instr.dest == instruction.dest and instruction.op != "STORE":
-                if not self.renaming_rules.create_rule(instruction.dest):
-                    return False
-                else:
-                    instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-            
-            # WAW Dependency Checking 
-            if instruction.dest == instr.dest:
-                if not self.renaming_rules.create_rule(instruction.dest):
-                    return False
-                else:
-                    instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-                #return False 
-        
-        if self._check_dependencies(instruction) != DependencyType.NONE:
+        # Check dependencies with instructions in progress 
+        if self._check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
             return False 
         else:
             return True 
     
-    def __is_ready_to_execute_from_pending_instructions(self, instruction):
-        for instr in self.pending_instructions:
+    def _check_dependencies(self, instruction, instruction_list):
+        for instr in instruction_list:
             if instr == instruction:
-                break
-            else:
-                # RAW Dependency Checking
-                if isinstance(instruction, ThreeRegInstruction):
-                    if instr.dest in [instruction.src1, instruction.src2] and instr.op != "STORE":
-                        return False
-                if instruction.op == "STORE":
-                    if instr.dest == instruction.dest and instr.op != "STORE":
-                        return False
-                
-                # WAR Dependency Checking 
-                if isinstance(instr, ThreeRegInstruction):
-                    if instruction.dest in [instr.src1, instr.src2] and instruction.op != "STORE":
-                        if not self.renaming_rules.create_rule(instruction.dest):
-                            return False
-                        else:
-                            instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-                if instr.op == "STORE":
-                    if instr.dest == instruction.dest and instruction.op != "STORE":
-                        if not self.renaming_rules.create_rule(instruction.dest):
-                            return False
-                        else:
-                            instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-                
-                # WAW Dependency Checking 
-                if instruction.dest == instr.dest and instruction.op != "STORE":
-                    if not self.renaming_rules.create_rule(instruction.dest):
-                        return False
-                    else:
-                        instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-                    #return False
-        
-        if self._check_dependencies(instruction) != DependencyType.NONE:
-            return False
-        else:
-            return True 
-        
-
-    def _check_dependencies(self, instruction):
-        for instr in self.instructions_in_progress:
-            # RAW Dependency (Read-After-Write)
+                return DependencyType.NONE
+            
+            # RAW Dependency (Read-After-Write), no solution
             if isinstance(instruction, ThreeRegInstruction):
-                if instr.dest in [instruction.src1, instruction.src2] and instr.op != "STORE":
+                if instr.dest in [instruction.src1, instruction.src2]:
                     return DependencyType.RAW
-        
-            # For STORE instructions, treat the 'dest' register as a source
-            if instruction.op == "STORE" and instr.op != "STORE":
+            
+            # RAW Dependency (Store Edition), treat the 'dest' register as a source, no solution
+            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE" and instr.op != "STORE":
                 if instr.dest == instruction.dest:
-                    return DependencyType.RAW  # Reading from a register that is being written to by another instruction
-
-            # WAR Dependency (Write-After-Read) - try to solve with renaming
+                    return DependencyType.RAW
+            
+            # WAR Dependency (Write-After-Read) - try to solve with renaming 
             if isinstance(instr, ThreeRegInstruction):
                 if instruction.dest in [instr.src1, instr.src2] and instruction.op != "STORE":
                     if not self.renaming_rules.create_rule(instruction.dest):
                         return DependencyType.WAR
-                    else:
+                    else:        
+                        # If it can be resolved the destination reg should change
                         instruction.dest = self.renaming_rules.rename_map[instruction.dest]
             if instr.op == "STORE" and instr.dest == instruction.dest and instruction.op != "STORE":
                 if not self.renaming_rules.create_rule(instruction.dest):
                     return DependencyType.WAR
                 else:
                     instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-        
-            # WAW Dependency (Write-After-Write) - try to solve with renaming
+            
+            # WAW Dependency (Write-After-Write) = try to solve with renaming
             if instruction.op != "STORE" and instruction.dest == instr.dest:
                 if not self.renaming_rules.create_rule(instruction.dest):
                     return DependencyType.WAW
                 else:
+                     # If it can be resolved the destination reg should change
                     instruction.dest = self.renaming_rules.rename_map[instruction.dest]
-    
         return DependencyType.NONE
+    
+    def __is_ready_to_execute_from_pending_instructions(self, instruction):
+        #This method is in charge of renaming the registers based on rules, getting rid of renaming rules, and also checking for data dependencies and looking to resolve them between pending and in-progress instructions
 
+        # Remove renaming rule if write register is there 
+        if instruction.dest in self.renaming_rules.rename_map and instruction.op != "STORE":
+            self.renaming_rules.remove_rule(instruction.dest)
+
+        # Check dependencies with pending instructions first 
+        if self._check_dependencies(instruction, self.pending_instructions) != DependencyType.NONE:
+            return False
+        
+        # Check dependencies with instructions in progress 
+        if self._check_dependencies(instruction, self.instructions_in_progress) != DependencyType.NONE:
+            return False 
+        else:
+            return True 
+    
     def _retire_instructions(self):
         i = 0 
         while i < len(self.instructions_in_progress):
@@ -178,3 +136,4 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
     def run(self):
         while self.instructions or self.instructions_in_progress or self.pending_instructions:
             self.execute_cycle()
+    
