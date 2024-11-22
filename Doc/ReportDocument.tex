@@ -43,22 +43,45 @@ The instruction scheduling simulation system is designed as a hierarchy of class
 The diagram in figure \ref{fig:ClassDiagram} encapsulates the logic that helped develop this simulation. In the following subsections, I will be explaining the logic and reasons behind each class seen in here.
 
 \subsection{Instruction Scheduler Abstract Class}
-The instruction scheduler was the layout all configurations should have, and contained the overlapping logic. It looked to highlight possibly repeated concrete methods and abstract methods, that each subclass should implement. The properties contained here where the following:
+The \lstinline|InstructionScheduler| abstract class defined the layout all configurations of instructions schedulers should follow. It defined the main components and methods they should have, and contained some of the overlapping logic that remained consistent throughout all configurations. It contained the following properties:
 \begin{itemize}
-    \item \lstinline|instructions|: instructions that should be executed by the scheduler
-    \item \lstinline|functional_units|: the number of parallel functional units in the scheduler
-    \item \lstinline|current_cycle|: the value of the current cycle
-    \item \lstinline|instructions_in_progress|: instructions that are currently in functional units
-    \item \lstinline|logger|: a list of strings, that where used to log results and debug statements
+    \item \lstinline|instructions|: this property looks to contain a list of instructions that need to be scheduled in the simulation.
+    \item \lstinline|functional_units|: this property represents the number of parallel functional units the scheduler has. It is a property defined by the user. 
+    \item \lstinline|current_cycle|: this property contains the current cycle of execution of the processor.
+    \item \lstinline|instructions_in_progress|: this property contains the list of instructions that are currently being executed. 
+    \item \lstinline|logger|: this property contains a `log book' of the logs performed by the scheduler, used for debug statements and keeping track of instructions in the order they retire (outputs).
 \end{itemize}
-
-All schedulers contained these properties, and additional properties came when we introduced register renaming or out of order execution and retirement. Now, let's look at the methods defined for this hierarchy. 
+These are the properties all schedulers contained, additional properties can be added to the subclasses of \lstinline|InstructionScheduler| when needed. Now, let's look at the methods defined in this parent class. 
 \begin{itemize}
-    \item \lstinline|__init__(self, functional_units)|: this function is helps the creation of instruction scheduler's instances. Filling up overlapping properties, when creating an instance.
-    \item \lstinline|run(self)|: the logic for running is the same for nearly all schedulers. This method is in charge of executing cycles until all instructions have been dispatched out of the scheduler. 
-    \item \lstinline|add_instruction(self, instruction)|: this method is in charge of dynamically adding an instruction to the list of instructions of a scheduler.
-    \item \textit{\lstinline|_retire_instructions(self)|}: this method is abstract since depending on the type of configuration of an instruction scheduler, different retirement logic should be implemented. Thus, this method is in charge of indicating that each subclass should define instruction retirement.
-    \item \textit{\lstinline|schedule(self)|}: this method is also abstract since it should define the main logic of instruction scheduling which is dependent on the configuration type.
+    \item \lstinline|__init__(self, functional_units=1)|: this constructor method is used to create instances of this class, and it is called by the children classes as to initialize the aforementioned properties. 
+    
+    \item \lstinline|add_instruction(self, instruction)|: this method is in charge of adding an instruction to \lstinline|instructions|. It is used to add parsed instructions set that we want to simulate the scheduling.
+    
+    \item \lstinline|execute_cycle(self)|: this method contains the logic of executing a cycle in the simulation incrementing \lstinline|current_cycle| by one, attempting to schedule instructions, and retiring instructions. The definition is as follows:
+    \begin{lstlisting}
+    def execute_cycle(self):
+        self.current_cycle += 1
+        self.schedule()
+        self._retire_instructions()
+    \end{lstlisting}
+    
+    \item \lstinline|run(self)|: this method is fairly straightforward, it executes cycles until all instructions have been dispatched out of the scheduler. Most configurations used the definition:
+    \begin{lstlisting}{language=Python}
+    def run(self):
+        while self.instructions or self.instructions_in_progress:
+            self.execute_cycle()
+    \end{lstlisting}
+
+    \item \lstinline|schedule(self)|: this method contains the logic for scheduling instructions. It is abstract, since each subclass configuration schedules instructions differently. 
+    
+    \item \lstinline|_schedule_instruction(self, instr : Instruction)|: this method is in charge of updating the status of an instruction whenever it gets scheduled. It does so in the following manner:
+    \begin{lstlisting}{language=Python}
+    def _schedule_instruction(self, instr : Instruction):
+        instr.issue_cycle = self.current_cycle
+        instr.exp_completion = self.current_cycle + instr.latency()
+        instr.started = True 
+        self.instructions_in_progress.append(instr)
+    \end{lstlisting}
 \end{itemize}
 
 

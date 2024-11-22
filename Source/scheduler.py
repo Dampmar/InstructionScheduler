@@ -20,8 +20,7 @@ class InstructionScheduler:
     def add_instruction(self, instruction):
         self.instructions.append(instruction)
     
-    # Method should be implemented in subclass, every instructions scheduler format retires 
-    # instructions differently
+    # Method should be implemented in subclass, every instructions scheduler format schedules instructions differently
     def schedule(self):
         raise NotImplementedError("Implemented in Subclass")
     
