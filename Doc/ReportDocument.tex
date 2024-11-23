@@ -51,12 +51,11 @@ The \lstinline|InstructionScheduler| abstract class defined the layout all confi
     \item \lstinline|instructions_in_progress|: this property contains the list of instructions that are currently being executed. 
     \item \lstinline|logger|: this property contains a `log book' of the logs performed by the scheduler, used for debug statements and keeping track of instructions in the order they retire (outputs).
 \end{itemize}
-These are the properties all schedulers contained, additional properties can be added to the subclasses of \lstinline|InstructionScheduler| when needed. Now, let's look at the methods defined in this parent class. 
+
+These are the properties all schedulers contained, additional properties can be added to the subclasses of \lstinline|InstructionScheduler| when needed. Now, let's look at the methods defined in this parent class in the following itemize:
 \begin{itemize}
     \item \lstinline|__init__(self, functional_units=1)|: this constructor method is used to create instances of this class, and it is called by the children classes as to initialize the aforementioned properties. 
-    
     \item \lstinline|add_instruction(self, instruction)|: this method is in charge of adding an instruction to \lstinline|instructions|. It is used to add parsed instructions set that we want to simulate the scheduling.
-    
     \item \lstinline|execute_cycle(self)|: this method contains the logic of executing a cycle in the simulation incrementing \lstinline|current_cycle| by one, attempting to schedule instructions, and retiring instructions. The definition is as follows:
     \begin{lstlisting}
     def execute_cycle(self):
@@ -64,16 +63,13 @@ These are the properties all schedulers contained, additional properties can be 
         self.schedule()
         self._retire_instructions()
     \end{lstlisting}
-    
     \item \lstinline|run(self)|: this method is fairly straightforward, it executes cycles until all instructions have been dispatched out of the scheduler. Most configurations used the definition:
     \begin{lstlisting}{language=Python}
     def run(self):
         while self.instructions or self.instructions_in_progress:
             self.execute_cycle()
     \end{lstlisting}
-
     \item \lstinline|schedule(self)|: this method contains the logic for scheduling instructions. It is abstract, since each subclass configuration schedules instructions differently. 
-    
     \item \lstinline|_schedule_instruction(self, instr : Instruction)|: this method is in charge of updating the status of an instruction whenever it gets scheduled. It does so in the following manner:
     \begin{lstlisting}{language=Python}
     def _schedule_instruction(self, instr : Instruction):
@@ -82,6 +78,7 @@ These are the properties all schedulers contained, additional properties can be 
         instr.started = True 
         self.instructions_in_progress.append(instr)
     \end{lstlisting}
+    \item \lstinline{_retire_instructions(self)}: this method should contains the logic for retiring instructions. It is abstract, since each subclass configuration retires instructions differently.
 \end{itemize}
 
 
