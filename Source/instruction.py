@@ -14,7 +14,7 @@ class Instruction:
     def log_status(self):
         raise NotImplementedError("Must be implemented in subclass")
     
-    def update_registers(self):
+    def update_registers(self, renaming_rules):
         raise NotImplementedError("Must be implemented in subclass")
     
     # Method to retire instructions 

@@ -25,12 +25,3 @@ class RenamingRules:
             self.available_physical_regs.add(physical_register)  # Return the register to the available pool
             return True
         return False
-
-    def apply_renaming(self, register):
-        """Apply renaming to a register (if it's renamed, return the physical register)."""
-        return self.rename_map.get(register, register)
-
-    def clear(self):
-        """Clear all renaming rules."""
-        self.rename_map.clear()
-        self.available_physical_regs = set([f"R{i}" for i in range(1, self.max_registers + 1)])  # Reset available registers
