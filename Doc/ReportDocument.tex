@@ -2,6 +2,8 @@
 \usepackage[a4paper, margin=1in]{geometry} % Adjust margin size as needed
 \usepackage{graphicx} % Required for inserting images
 \usepackage{listings}
+\usepackage{ulem}
+\usepackage{setspace}
 \lstset{basicstyle=\ttfamily}
 \usepackage{float}
 \usepackage{courier}
@@ -13,6 +15,8 @@
 \usepackage{hyperref}
 \usepackage{MnSymbol}
 \usepackage{indentfirst}
+\usepackage{subcaption} % For side-by-side subfigures
+\setstretch{1.3}
 
 \title{Project: Report Document}
 \author{Daniel Alejandro Marin - R11858881\\ \\ Texas Tech University \\CS3375 - Computer Architecture \\ Instructor: Dr. Juan Carlos Rojas}
@@ -22,7 +26,9 @@
 \tableofcontents
 \newpage
 \section{Introduction}
-Instruction scheduling plays a crucial role in moder computer architecture, especially for achieving high performance in multi-issue processors; they allow for faster instruction throughput. This project aims to simulate the scheduling of `assembly' instructions under various processor configurations. The configurations developed in this project are the following:
+Instruction scheduling plays a crucial role in moder computer architecture, especially for achieving high performance in multi-issue processors; they allow for faster instruction throughput. There are various techniques utilized in the industry to increase instruction throughput: register renaming and out-of-order execution are a few. Register renaming is the process of looking to resolve data dependencies between instructions by creating Register mapping rules that allow for the correct results of a program to be achieved at much faster speeds; and out-of-order execution is based on the principle of ``doesn't matter the route, what matters is getting there'' implying that as long as the end result remains consistent with the program order, instructions may be scheduled and retired in any order. 
+
+This project aims to simulate the scheduling of `assembly' instructions under various processor configurations that look to exhibit the improvements in instruction throughput based on the techniques discussed before. The configurations developed in this project are the following:
 
 \begin{itemize}
     \item Single-issue Instruction Scheduler (in-order)
@@ -30,7 +36,7 @@ Instruction scheduling plays a crucial role in moder computer architecture, espe
     \item Superscalar Instruction Scheduler (out of order) 
 \end{itemize}
 
-For each of this configurations there exists a version with register renaming and one without. In this project, we will simulate a the scheduling of a simple assembly instruction set, in each of these configurations. 
+For each of this configurations there exists a version with register renaming and one without. In this project, we will simulate a the scheduling of a simple assembly instruction set, in each of these configurations. This configurations where developed with the help of the class presentations and personal understanding of programming.
 
 Throughout this report document, we will be explaining the design, implementation details, test and results of each configuration. The insights gained will highlight the advantages and limitations of these techniques in processor architectures. 
 
@@ -116,7 +122,7 @@ The properties in this class are used to represent renaming rules in the program
 \end{lstlisting}
     This snippet of the program creates a mapping between one of the available hidden registers and the register it received as input. 
     \item \lstinline|remove_rule(self, logical_register)|: this method is in charge of removing rules for a certain logical register, it looks to invalidate existing renaming rules. The function is as follows:
-\begin{lstlisting}
+\begin{lstlisting}[language=Python]
         if logical_register in self.rename_map:
             physical_register = self.rename_map.pop(logical_register)
             self.available_physical_regs.add(physical_register) 
@@ -143,59 +149,396 @@ Let's begin by looking at the list of all the properties that the classes in thi
     \item \lstinline|logger|: contains a list of strings that represent debug messages and statements of actions that are taking place while scheduling. \textbf{All configurations} contain this, and it represents a list of outputs.
     \item \lstinline|max_issue_per_cycle|: the number of issue slots per cycle for a certain configuration. Only \textbf{Superscalar configurations} contain this property, because it represents it indicates how many instructions should be attempted per executed cycle.
     \item \lstinline|pending_instructions|: a list of instructions that have been overlooked/skipped by the processor configuration. This list is only present in \textbf{configurations with Out of Order execution}.
-    \item \lstinline|renaming_rules|: contains an instance of the \lstinline|RenamingRules| class to create, delete and map renaming rules. This instance is only present in configurations that apply the \textbf{register renaming technique}. 
+    \item \lstinline|renaming_rules|: contains an instance of the \lstinline|RenamingRules| class to create, delete and map renaming rules. This instance is only present in configurations with \textbf{Register Renaming technique}. 
 \end{itemize}
 
-\subsection{Instruction Scheduler Abstract Class}
-The \lstinline|InstructionScheduler| abstract class defined the layout all configurations of instructions schedulers should follow. It defined the main components and methods they should have, and contained some of the overlapping logic that remained consistent throughout all configurations. It contained the following properties:
-\begin{itemize}
-    \item \lstinline|instructions|: this property looks to contain a list of instructions that need to be scheduled in the simulation.
-    \item \lstinline|functional_units|: this property represents the number of parallel functional units the scheduler has. It is a property defined by the user. 
-    \item \lstinline|current_cycle|: this property contains the current cycle of execution of the processor.
-    \item \lstinline|instructions_in_progress|: this property contains the list of instructions that are currently being executed. 
-    \item \lstinline|logger|: this property contains a `log book' of the logs performed by the scheduler, used for debug statements and keeping track of instructions in the order they retire (outputs).
-\end{itemize}
+The properties stated aforementioned are combined in various ways to provide the information necessary to achieve the desired behavior of the instruction scheduler configurations stated in the beginning of this report document.
 
-These are the properties all schedulers contained, additional properties can be added to the subclasses of \lstinline|InstructionScheduler| when needed. Now, let's look at the methods defined in this parent class in the following itemize:
+The methods in this hierarchy are mostly different with a certain set of features that are the same for all. These features, como from overlapping behaviors and can be encapsulated in the following bulletpoints:
+
 \begin{itemize}
-    \item \lstinline|__init__(self, functional_units=1)|: this constructor method is used to create instances of this class, and it is called by the children classes as to initialize the aforementioned properties. 
-    \item \lstinline|add_instruction(self, instruction)|: this method is in charge of adding an instruction to \lstinline|instructions|. It is used to add parsed instructions set that we want to simulate the scheduling.
-    \item \lstinline|execute_cycle(self)|: this method contains the logic of executing a cycle in the simulation incrementing \lstinline|current_cycle| by one, attempting to schedule instructions, and retiring instructions. The definition is as follows:
-    \begin{lstlisting}
+    \item \lstinline{add_instruction(self, instruction)}: this method is in charge of adding an instruction to \lstinline|instructions| of each instance. It is used to input the instruction set from the file.
+    \item \lstinline{execute_cycle(self)}: this method contains the logic of executing a cycle; increment cycle, schedule instructions, and retire instructions. It does so by performing these commands:
+    \begin{lstlisting}[language=Python]
     def execute_cycle(self):
         self.current_cycle += 1
         self.schedule()
         self._retire_instructions()
     \end{lstlisting}
-    \item \lstinline|run(self)|: this method is fairly straightforward, it executes cycles until all instructions have been dispatched out of the scheduler. Most configurations used the definition:
-    \begin{lstlisting}{language=Python}
-    def run(self):
-        while self.instructions or self.instructions_in_progress:
-            self.execute_cycle()
-    \end{lstlisting}
-    \item \lstinline|schedule(self)|: this method contains the logic for scheduling instructions. It is abstract, since each subclass configuration schedules instructions differently. 
-    \item \lstinline|_schedule_instruction(self, instr : Instruction)|: this method is in charge of updating the status of an instruction whenever it gets scheduled. It does so in the following manner:
-    \begin{lstlisting}{language=Python}
+    \item \lstinline|_schedule_instruction(self, instr)|: this method is in charge of scheduling an instruction whenever called. This requieres the following logic: 
+    \begin{lstlisting}[language=Python]
     def _schedule_instruction(self, instr : Instruction):
         instr.issue_cycle = self.current_cycle
         instr.exp_completion = self.current_cycle + instr.latency()
         instr.started = True 
         self.instructions_in_progress.append(instr)
     \end{lstlisting}
-    \item \lstinline{_retire_instructions(self)}: this method should contains the logic for retiring instructions. It is abstract, since each subclass configuration retires instructions differently.
+    Where some of the instruction's properties get modified, and the instruction being scheduled is added to the list of instructions in progress. 
+    \item \lstinline|run(self)|: this method is in charge of repeatedly running cycles until all instructions have been processed. For most configurations it has this format:
+    \begin{lstlisting}
+    def run(self):
+        while self.instructions or self.instructions_in_progress:
+            self.execute_cycle()
+    \end{lstlisting}
 \end{itemize}
 
-\subsection{Instruction Scheduler's}
-In this section we will be discussing the various concrete classes that make up the actual instruction scheduler's. Before looking at each configuration individually let's look at all the version's / processor capabilities developed:
-\begin{itemize}
-    \item Single instruction, in-order execution
-    \item Superscalar, in-order execution
-    \item 
-\end{itemize}
+The three items that where just described are consistent throughout all, but they don't contain the whole logic behind the instruction scheduling and instruction retiring. The core logic of this simulation is found in the \lstinline|schedule| and \lstinline|_retire_instructions| methods. As a quick description each configuration type (for both, with or without register renaming) has a different format for scheduling and retiring.
 
-\section{Methodology}
+\subsubsection{Single-issue Instruction Scheduler Configurations}
+Single-issue Instruction Scheduler configurations use in-order execution and retirement, this implies that both versions of this format use the same logic for instruction scheduling. The method in charge of this is the following:
 
-\section{Tests}
+\begin{lstlisting}[language=Python]
+def schedule(self):
+    if len(self.instructions_in_progress) < self.functional_units and self-
+    .instructions:
+        instr = self.instructions[0]
+        if self.__is_ready_to_execute(instr):
+            self._schedule_instruction(instr)
+            self.instructions.remove(instr) 
+\end{lstlisting}
+
+This version of the schedule logic is in charge of looking at the instruction list as a queue, where every cycle you can only check if you can schedule the oldest instruction. This method checks if there is space to schedule an instruction, and if there are remaining instructions to schedule. It only schedules instruction that are ready to execute. 
+
+Being ready to execute implies checking data dependencies, and looking to resolve them when there is register renaming. Thus, implying that the difference between the two versions of Single-issue Instruction Scheduler's rellies on the checking if an instruction is ready to execute.
+
+In the original version (no register renaming) the methods used for checking readiness of an instruction before scheduling is as follows:
+
+\begin{lstlisting}[language=Python]
+def __is_ready_to_execute(self, instruction):
+    return self.__check_dependencies(instruction) == DependencyType.NONE
+    
+def __check_dependencies(self, instruction):
+    for instr in self.instructions_in_progress:
+        if (isinstance(instruction, ThreeRegInstruction)) 
+        and instr.dest in [instruction.src1, instruction.src2]:
+            return DependencyType.RAW
+        if instruction.op == "STORE" and instr.dest == instruction.dest:
+            return DependencyType.RAW
+        if isinstance(instr, ThreeRegInstruction) 
+        and instruction.dest in [instr.src1, instr.src2]:
+            return DependencyType.WAW
+        if instruction.dest == instr.dest:
+            return DependencyType.WAW
+    return DependencyType.NONE
+\end{lstlisting}
+
+The methods stated above contain the logic for checking if there is a data dependency, and only allow instructions that have no data dependencies to be executed. The return values seen in the method \lstinline|__check_dependencies(self, instruction)| are an enum used to describe the data dependency types differentiate between them.
+
+The version with register renaming of this configurations has the same logical checks but with the difference that in the method \lstinline| __is_ready_to_execute(self, instruction)| we first update the source registers and check if the destination register implies the invalidation of a renaming rule, before checking for data dependencies. Also, any write-after data dependencies are solved with the creation of register renaming rules.
+
+Lastly, in-order instruction retirement is performed in the same manner for both versions of this configuration. Where we look to try and retire the in the First Come, First Retired order of a queue. This logic is defined in the following method:
+
+\begin{lstlisting}[language=Python]
+def _retire_instructions(self): 
+    for instr in self.instructions_in_progress[:]:
+        if self.current_cycle >= instr.exp_completion:
+            instr.retire(self.current_cycle)
+            self.logger.append(f"{instr.log_status()}")
+            self.instructions_in_progress.remove(instr)
+        else:
+            break
+\end{lstlisting}
+
+This method looks at the list of instructions in progress and tries to retire the oldest instruction first, if it can't it waits until the cycle in which the oldest instruction can be retired otherwise it just continues doing this with the second to oldest instruction.
+
+\subsubsection{Superscalar Instruction Scheduler Configurations}
+In this section we will be discussing the logic behind all versions of superscalar instruction scheduler configurations. As a quick description, these configurations attempt to issue multiple instructions at the same time. There are two main versions: in-order execution and retirement (simplest) and out of order execution and retirement (complex). Let's begin by discussing the first.
+
+\paragraph{In-Order Execution and Retirement}
+Interestingly enough, both In-order Superscalar Instruction Scheduler versions only have one modification; that achieves the desired behavior; from their Single Instruction Scheduler counterparts. Which is iterating various times in the scheduling of an instruction based on the issue slots available. This is achieved by only modifying the schedule method while maintaining the rest of the logic the same. 
+
+\begin{lstlisting}[language=Python]
+def schedule(self):
+    attempted_issues = 0
+    for instruction in self.instructions[:]:
+        if len(self.instructions_in_progress) < self.functional_units 
+        and attempted_issues < self.max_issue_per_cycle:
+            attempted_issues += 1
+            if self.__is_ready_to_execute(instruction):
+                self._schedule_instruction(instruction)
+                self.instructions.remove(instruction)
+            else:
+                break
+\end{lstlisting}
+
+This method allows the behavior of a superscalar in-order instruction scheduler to be acheived. I decided to not explain the rest since we already have the explanation in the section before.
+
+\paragraph{Out of Order Execution and Retirement}
+This set of configurations bring a lot of complexity to the equation. Since, these classes of configurations requiere instructions to be issued from both the list of pending instructions and the list of instructions. Thus, requiering two different types of checks. Before analysing the checks, we may begin by looking at how out of order execution is achieved.
+
+\begin{lstlisting}[language=Python]
+def schedule(self):
+    attempted_issues = 0
+    for pending in self.pending_instructions[:]:
+        if len(self.instructions_in_progress) < self.functional_units:
+            if self.__is_ready_to_execute_from_pending_instructions(pending):
+                self._schedule_instruction(pending)
+                self.pending_instructions.remove(pending)
+
+    for instruction in self.instructions[:]:
+        if len(self.instructions_in_progress) < self.functional_units 
+        and attempted_issues < self.max_issue_per_cycle:
+            attempted_issues += 1
+            if self.__is_ready_to_execute_from_instructions(instruction):
+                self._schedule_instruction(instruction)
+                self.instructions.remove(instruction)
+            else:
+                self.pending_instructions.append(instruction)
+                self.instructions.remove(instruction)
+\end{lstlisting}
+
+The reasoning behind this method is that we attempt first instructions that have been overlooked (pending instructions), trying to see if the dependencies have already been resolved and we try to schedule them. And once we have tried all possible pending instructions we move on to issue as many new instructions as allowed by the number of issue slots; if new instructions can't be scheduled we overlook them. This process allows instructions to be executed out of order as long as no dependencies exist.
+
+The process of checking dependencies is similar to the ones mentioned before, with the exception that when we schedule instructions from the list of instructions we must check that there are no dependencies with all pending and in progress instructions. Meanwhile, when we process instructions from the list of pending instructions we must check that there are no dependencies with in-progress instructions or with instructions that where overlooked before the current one being processed. 
+
+The version of this configuration with \textbf{register renaming} does the same process of trying to resolve write-after data dependencies with both pending and in-progress instructions, considering the past constraint. Yet, source registers can only be updated by renaming rules when the instruction being processed comes from the original list of instructions.
+
+Out of order retiring was achieved by attempting to retire any in-progress instructions if they had already been completed and writing to their destination registers wouldn't imply any discrepencies between the desired logic of the assembly instructions. The methods that help implement this logic are:
+
+\begin{lstlisting}[language=Python]
+def _retire_instructions(self):
+    i = 0 
+    while i < len(self.instructions_in_progress):
+        instr = self.instructions_in_progress[i]
+        if self.current_cycle >= instr.exp_completion 
+        and self.__can_retire_instructions(instr):
+            instr.retire(self.current_cycle)
+            self.logger.append(f"{instr.log_status()}")
+            self.instructions_in_progress.pop(i)
+        else:
+            i += 1
+    
+def __can_retire_instructions(self, instruction):
+    for instr in self.instructions_in_progress:
+        if instr.issue_cycle < instruction.issue_cycle:
+            if isinstance(instr, ThreeRegInstruction) 
+            and instruction.dest in [instr.src1, instr.src2]:
+                return False
+            if instr.dest == instruction.dest
+            and instruction.op != 'STORE':
+                return False
+    return True
+\end{lstlisting}
+
+These methods are the implemented logic that check if an instruction may be retired, and completing the process of scheduling instructions by completely retiring them. This is done in this manner to prevent instructions to be retired while not maintaining the proper logic of the program.
+
+And lastly, for all instructions to be processed properly the \lstinline|run| method had to be overwritten for it to also consider the list of pending instructions:
+\begin{lstlisting}[language=Python]
+ def run(self):
+    while self.instructions or self.instructions_in_progress 
+    or self.pending_instructions:
+        self.execute_cycle()
+\end{lstlisting}
+
+With all these being said, we have discussed the entire implementation and design of the program I developed for this project. It is important to understand that this explanation contains the main concepts that lead to the desired behavior but fails to explain all methods and properties with utmost detail. Yet, the actual behavior applied is mentioned for all. If you'd want a better understanding it is better to look at the source files while reading the Methodology section to further familiarize with the implementation. All snippets of code in this section, are uncommented versions.
+
+\section{Validation \& Verification}
+The design demonstrates the logic utilized, but we need to visualize that the implementation discussed in the past section has the desired behavior. To do so, we will be comparing the results of my simulation against those seen in class as to demonstrate whether the simulation is correct. 
+
+\begin{figure}[H]
+    \begin{lstlisting}
+                                R3 = R0 * R1
+                                R4 = R0 + R2
+                                R5 = R0 + R1
+                                R6 = R1 + R4
+                                R7 = R1 * R2
+                                R1 = R0 - R2
+                                R3 = R3 * R1
+                                R1 = R4 + R4  
+    \end{lstlisting}
+    \caption{This is the set of assembly instruction's analyzed during the Case Study's in class.}
+    \label{fig:CaseStudyAssembly}
+\end{figure}
+
+We will first write the configuration and demonstrate the results for the class results in the left hand side and the screenshot of the results in my program.
+\begin{enumerate}
+    \item Superscalar In-order Instruction Scheduler with 2 Issue Slots and No Register Renaming. This configuration is the one we studied for Case Study 1.
+    \begin{figure}[H]
+        \centering{}
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \renewcommand{\arraystretch}{0.8} % Increases row height for readability
+            \setlength{\tabcolsep}{3pt} % Adjusts padding between columns
+            \begin{tabular}{|c|p{3.4cm}|c|}
+                \hline
+                \textbf{Cycle} & \textbf{Instructions Issued} & \textbf{Retired} \\ \hline
+                1 & 1. R3 = R0 * R1 & \\ 
+                  & 2. R4 = R0 + R2 & \\ \hline
+                2 & 3. R5 = R0 + R1 & \\ 
+                  & \sout{4. R6 = R1 + R4} & \\ \hline
+                3 &                 & \\ \hline
+                 &                 & 1 \\ 
+                4 &                 & 2 \\ 
+                 &                 & 3 \\ \hline
+                5 & 4. R6 = R1 + R4 & \\
+                  & 5. R7 = R1 * R2 & \\ \hline 
+                6 & \sout{6. R1 = R0 - R2} & \\ \hline
+                7 & & 4 \\ \hline 
+                8 & & 5 \\ \hline 
+                9 & 6. R1 = R0 - R2 & \\ \hline
+                  & \sout{7. R3 = R3 * R1} & \\ \hline
+                10 & & \\ \hline 
+                11 & & 6 \\ \hline 
+                12 & 7. R3 = R3 * R1 & \\ \hline 
+                & \sout{8. R1 = R4 + R4} & \\ \hline
+                13 & & \\ \hline
+                14 & & \\ \hline 
+                15 & & 7 \\ \hline 
+                16 & 8. R1 = R4 + R4 & \\ \hline 
+                17 & & \\ \hline 
+                18 & & 8 \\ \hline 
+            \end{tabular}
+        \end{minipage}
+        \begin{minipage}[t]{0.45\textwidth}
+            \renewcommand{\arraystretch}{1} % Increases row height for readability
+            \setlength{\tabcolsep}{3pt} % Adjusts padding between columns
+            \begin{tabular}{|p{3.4cm}|c|c|}
+                \hline
+                \textbf{Instruction} & \textbf{Issued} & \textbf{Retired} \\ \hline
+                1. R3 = R0 * R1 & 1 & 4 \\ \hline 
+                2. R4 = R0 + R2 & 1 & 4 \\ \hline 
+                3. R5 = R0 + R1 & 2 & 4 \\ \hline 
+                4. R6 = R1 + R4 & 5 & 7 \\ \hline 
+                5. R7 = R1 * R2 & 5 & 7 \\ \hline
+                6. R1 = R0 - R2 & 9 & 11 \\ \hline
+                7. R3 = R3 * R1 & 12 & 15 \\ \hline 
+                8. R1 = R4 + R4 & 16 & 18 \\ \hline 
+            \end{tabular}
+            \newline 
+            \newline        
+            The results from my simulation; although formatted differently, demonstrate the exact same behavior as the results from the case study. This proves that the simulation, at least for Superscalar In-order Instruction Schedulers with no renaming, is proper.
+        \end{minipage}
+        \caption{Comparison of simulation results for the in-class case study 1 (left) and custom configuration (right).}
+    \end{figure}
+    
+    \item Superscalar In-order Instruction Scheduler with 2 Issue Slots and Register Renaming. This is the configuration we studied for Case Study 2 in class. 
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \renewcommand{\arraystretch}{0.9} % Adjusts row height
+            \setlength{\tabcolsep}{3pt} % Adjusts column padding
+            \begin{tabular}{|c|p{3.4cm}|c|}
+                \hline
+                \textbf{Cycle} & \textbf{Instructions Issued} & \textbf{Retired} \\ \hline
+                1 & 1. R3 = R0 * R1 & \\ 
+                  & 2. R4 = R0 + R2 & \\ \hline
+                2 & 3. R5 = R0 + R1 & \\ 
+                  & \sout{4. R6 = R1 + R4} & \\ \hline
+                3 &                 & \\ \hline
+                  &                 & 1 \\ 
+                4 &                 & 2 \\ 
+                  &                 & 3 \\ \hline
+                5 & 4. R6 = R1 + R4 & \\
+                  & 5. R7 = R1 * R2 & \\ \hline 
+                6 & 6. R1 = R0 - R2 & \\ 
+                  & \sout{7. R3 = R3 * R1} & \\ \hline 
+                7 &                 & 4 \\ \hline 
+                8 &                 & 5 \\ \hline 
+                  &                 & 6 \\ \hline 
+                9 & 7. R3 = R3 * R1 & \\ 
+                  & 8. R1 = R4 + R4 & \\ \hline 
+               10 &                 & \\ \hline 
+               11 &                 & \\ \hline 
+               12 &                 & 7 \\ 
+                  &                 & 8 \\ \hline 
+            \end{tabular}
+        \end{minipage}
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \renewcommand{\arraystretch}{1.2} % Adjusts row height
+            \setlength{\tabcolsep}{3pt} % Adjusts column padding
+            \begin{tabular}{|p{3.4cm}|c|c|}
+                \hline
+                \textbf{Instruction} & \textbf{Issued} & \textbf{Retired} \\ \hline
+                1. R3 = R0 * R1 & 1 & 4 \\ \hline 
+                2. R4 = R0 + R2 & 1 & 4 \\ \hline 
+                3. R5 = R0 + R1 & 2 & 4 \\ \hline 
+                4. R6 = R1 + R4 & 5 & 7 \\ \hline 
+                5. R7 = R1 * R2 & 5 & 8 \\ \hline
+                6. R1 = R0 - R2 & 6 & 8 \\ \hline
+                7. R3 = R3 * R1 & 9 & 12 \\ \hline 
+                8. R1 = R4 + R4 & 9 & 12 \\ \hline 
+            \end{tabular}
+            \vspace{1em} % Adds vertical space
+            \raggedright
+
+            The results of both my simulation and the in-class case study are consistent, proving that the Superscalar In-order Instruction Scheduler with Renaming provides the desired behavior.
+        \end{minipage}
+        \caption{Comparison of simulation results for the in-class case study 2 (left) and custom configuration (right).}
+    \end{figure}
+
+    \item Superscalar Out-of-order Instruction Scheduler with 2 Issue Slots and Register Renaming. This is the configuration we studied for Case Study 4 in class. 
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \renewcommand{\arraystretch}{0.9} % Adjusts row height
+            \setlength{\tabcolsep}{3pt} % Adjusts column padding
+            \begin{tabular}{|c|p{3.4cm}|c|}
+                \hline
+                \textbf{Cycle} & \textbf{Instructions Issued} & \textbf{Retired} \\ \hline
+                1 & 1. R3 = R0 * R1 & \\ 
+                  & 2. R4 = R0 + R2 & \\ \hline
+                2 & 3. R5 = R0 + R1 & \\ 
+                  & \sout{4. R6 = R1 + R4} & \\ \hline
+                3 & 5. R7 = R1 * R2 & \\ 
+                  & 6. S1 = R0 - R2 & \\
+                  & & 2 \\ \hline 
+                4 & 4. R6 = R1 + R4 & \\ 
+                  & \sout{7. R3 = R3 * S1} & \\
+                  & 8. S2 = R4 + R4 & \\
+                  & & 1 \\
+                  & & 3 \\ \hline 
+                5 & & 6 \\ \hline 
+                6 & 7. R3 = R3 * S1 & \\
+                & & 4 \\ 
+                & & 5 \\ 
+                & & 8 \\ \hline 
+                7 & & \\ \hline 
+                8 & & \\ \hline 
+                9 & & 7 \\ \hline 
+            \end{tabular}
+        \end{minipage}
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \renewcommand{\arraystretch}{1.2} % Adjusts row height
+            \setlength{\tabcolsep}{3pt} % Adjusts column padding
+            \begin{tabular}{|p{3.4cm}|c|c|}
+                \hline
+                \textbf{Instruction} & \textbf{Issued} & \textbf{Retired} \\ \hline
+                2. R4 = R0 + R2 & 1 & 3 \\ \hline 
+                1. R3 = R0 * R1 & 1 & 4 \\ \hline 
+                3. R5 = R0 + R1 & 2 & 4 \\ \hline 
+                6. S4 = R0 - R2 & 3 & 5 \\ \hline 
+                5. R7 = R1 * R2 & 3 & 6 \\ \hline 
+                4. R6 = R1 + R4 & 4 & 6 \\ \hline 
+                8. S3 = R4 + R4 & 4 & 6 \\ \hline 
+                7. R3 = R3 * S4 & 6 & 9 \\ \hline 
+            \end{tabular}
+            \vspace{1em} % Adds vertical space
+            \raggedright
+
+            The results allthough formatted differently have the same behavior. Proving that also the Superscalar Out-of-order Instruction Scheduler with Renaming works properly. 
+        \end{minipage}
+        \caption{Comparison of simulation results for the in-class case study 2 (left) and custom configuration (right).}
+    \end{figure}
+\end{enumerate}
+
+I believe that this set of examples are enough to validate and verify that the simulation does provide proper behavior. These tests where only developed to demonstrate that the simulation was fruitful, and that it does achieve the prerequisites of this project. 
+
+With this we can begin to look at all configurations handling an individual test, that contains the correct latencies of: ``+'', ``-'' take 1 cycle, ``*'' take 2 cycles, and ``LOAD'' and ``STORE'' instructions take 3; and that contains all sort of data dependencies without the need of worrying if it works properly and only analysing the improvement each configuration was able to achieve in regards of instruction throughput.
+
+The test that will be used to verify the relationship between the various techniques and instruction throughput is found in the ``test'' folder in the file ``instructions.asm''. This assembly ``program'' contains data dependencies between all types of instructions, testing the overall rigidness of this program and also demonstrating proper behavior. With this being said, let's look at the results for the following configurations (all with 4 functional units) both with and without register renaming.
+
+\begin{enumerate}
+    \item 1 issue slot, in-order 
+    \item 1 issue slot, out-of-order issue and retirement 
+    \item 2 issue slots, in-order 
+    \item 2 issue slots, out-of-order issue and retirement 
+    \item 3 issue slot, in-order 
+    \item 3 issue slots, out-of-order issue and retirement 
+\end{enumerate}
 
 \section{Results}
 

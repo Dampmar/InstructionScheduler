@@ -16,7 +16,7 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
         # Try to issue pending instructions first from the pending instructions list
         for pending in self.pending_instructions[:]:
             # Check capacity
-            if len(self.instructions_in_progress) < self.functional_units and attempted_issues < self.max_issue_per_cycle:
+            if len(self.instructions_in_progress) < self.functional_units:
                 # Check if the pending instruction is ready to execute, dependencies have been resolved
                 if self.__is_ready_to_execute_from_pending_instructions(pending):
                     # Schedule the instruction
@@ -128,7 +128,7 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
             if instr.issue_cycle < instruction.issue_cycle:
                 if isinstance(instr, ThreeRegInstruction) and instruction.dest in [instr.src1, instr.src2]:
                     return False
-                if instr.dest == instruction.dest:
+                if instr.dest == instruction.dest and instruction.op != 'STORE':
                     return False
             
         return True 

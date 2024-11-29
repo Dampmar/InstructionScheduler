@@ -1,14 +1,15 @@
 \contentsline {section}{\numberline {1}Introduction}{2}{section.1}%
 \contentsline {section}{\numberline {2}Design and Methodology}{2}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Assembly Format}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.1}Assembly Format}{3}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Instruction Hierarchy}{3}{subsection.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.1}Three Register Instructions}{3}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.1}Three Register Instructions}{4}{subsubsection.2.2.1}%
 \contentsline {subsubsection}{\numberline {2.2.2}Load and Store Instructions}{4}{subsubsection.2.2.2}%
 \contentsline {subsection}{\numberline {2.3}Register Renaming Rules}{4}{subsection.2.3}%
 \contentsline {subsection}{\numberline {2.4}Instruction Scheduler Hierarchy}{5}{subsection.2.4}%
-\contentsline {subsection}{\numberline {2.5}Instruction Scheduler Abstract Class}{5}{subsection.2.5}%
-\contentsline {subsection}{\numberline {2.6}Instruction Scheduler's}{6}{subsection.2.6}%
-\contentsline {section}{\numberline {3}Methodology}{6}{section.3}%
-\contentsline {section}{\numberline {4}Tests}{6}{section.4}%
-\contentsline {section}{\numberline {5}Results}{6}{section.5}%
-\contentsline {section}{\numberline {6}Discussion}{6}{section.6}%
+\contentsline {subsubsection}{\numberline {2.4.1}Single-issue Instruction Scheduler Configurations}{7}{subsubsection.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.4.2}Superscalar Instruction Scheduler Configurations}{8}{subsubsection.2.4.2}%
+\contentsline {paragraph}{In-Order Execution and Retirement}{8}{section*.3}%
+\contentsline {paragraph}{Out of Order Execution and Retirement}{9}{section*.4}%
+\contentsline {section}{\numberline {3}Validation \& Verification}{11}{section.3}%
+\contentsline {section}{\numberline {4}Results}{15}{section.4}%
+\contentsline {section}{\numberline {5}Discussion}{15}{section.5}%
