@@ -19,12 +19,25 @@
 \setstretch{1.3}
 
 \title{Project: Report Document}
-\author{Daniel Alejandro Marin - R11858881\\ \\ Texas Tech University \\CS3375 - Computer Architecture \\ Instructor: Dr. Juan Carlos Rojas}
+\author{Daniel Alejandro Marin - R11858881\\
+    \small Texas Tech University \\
+    \small CS3375 - Computer Architecture \\ 
+    \small Instructor: Dr. Juan Carlos Rojas}
 \date{December 6$^{th}$, 2024}
 \begin{document}
 \maketitle
+\begin{abstract}
+    This project explores the design and implementation of advanced instruction scheduling techniques in modern superscalar and out-of-order processors. This document delves into a systematic methodologu, including the desing of in-order and out-of-order scheduling algorithms, dependency analysis, and resource arbitration mechanisms. 
+    
+    This document also justifies the behavior displayed by the simulations as correct through a set of examples that are compared. Results highlight the effectiveness of these techniques in mitigating stalls and enhancing instruction-level parallelism, supported by a comparative analysis of in-class case studies and experimental simulations.
+    
+    This paper concludes with a discussion into instruction scheduling and the improvements it has provided for modern computing systems.
+\end{abstract}
+
 \tableofcontents
+
 \newpage
+
 \section{Introduction}
 Instruction scheduling plays a crucial role in modern computer architecture, especially for achieving high performance in multi-issue processors; they allow for faster instruction throughput. There are various techniques utilized in the industry to increase instruction throughput: register renaming and out-of-order execution are a few. 
 
@@ -546,7 +559,7 @@ The test that will be used to verify the relationship between the various techni
 \section{Results}
 This section contains screenshots of the results of simulating each of the aforementioned configurations. These results are only placed here to facilitate the visualization of outputs without the need to run the program for anyone reading this document or evaluating this project. Outputs will be placed for both register renaming (right) and no register renaming (left) version's of each configuration stated in the past section. 
 \begin{enumerate}
-    \item 1 issue slot, in-order 
+    \item 1 issue slot, in-order results for 
     \begin{figure}[H]
         \centering 
         \begin{minipage}[t]{0.45\textwidth}
@@ -561,13 +574,93 @@ This section contains screenshots of the results of simulating each of the afore
             \caption{1 issue slot, in-order configuration with register renaming.}
         \end{minipage}
     \end{figure}
+
     \item 1 issue slot, out-of-order issue and retirement 
+    \begin{figure}[H]
+        \centering 
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Images/Config2.png}
+            \caption{1 issue slot, out-of-order issue and retirement configuration without register renaming.}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering 
+            \includegraphics[width=\textwidth]{Images/Config2_Renaming.png}
+            \caption{1 issue slot, out-of-order issue and retirement configuration with register renaming.}
+        \end{minipage}
+    \end{figure}
+
     \item 2 issue slots, in-order 
+    \begin{figure}[H]
+        \centering 
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Images/Config3.png}
+            \caption{2 issue slot, in-order configuration without register renaming.}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering 
+            \includegraphics[width=\textwidth]{Images/Config3_Renaming.png}
+            \caption{2 issue slot, in-order configuration with register renaming.}
+        \end{minipage}
+    \end{figure}
+
     \item 2 issue slots, out-of-order issue and retirement 
-    \item 3 issue slot, in-order 
+    \begin{figure}[H]
+        \centering 
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Images/Config4.png}
+            \caption{2 issue slot, out-of-order issue and retirement without register renaming.}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering 
+            \includegraphics[width=\textwidth]{Images/Config4_Renaming.png}
+            \caption{2 issue slot, out-of-order issue and retirement with register renaming.}
+        \end{minipage}
+    \end{figure}
+
+    \item 3 issue slot, in-order
+    \begin{figure}[H]
+        \centering 
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Images/Config5.png}
+            \caption{3 issue slot, in-order configuration without register renaming.}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering 
+            \includegraphics[width=\textwidth]{Images/Config5_Renaming.png}
+            \caption{3 issue slot, in-order configuration with register renaming.}
+        \end{minipage}
+    \end{figure}
+
     \item 3 issue slots, out-of-order issue and retirement 
+    \begin{figure}[H]
+        \centering 
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Images/Config6.png}
+            \caption{3 issue slot, out-of-order issue and retirement without register renaming.}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering 
+            \includegraphics[width=\textwidth]{Images/Config6_Renaming.png}
+            \caption{3 issue slot, out-of-order issue and retirement with register renaming.}
+        \end{minipage}
+    \end{figure}
 \end{enumerate}
 
+The results found in the past enumerate demonstrate the overall behavior for combinations of configurations. Where out-of-order superscalar instruction scheduler's with renaming out perform all other configurations. Various concepts discussed in class such as how the `sweetspot' for issue slots was of 2 and that out-of-order execution improves instruction throughput have been proven. Similar counterparts of 2 and 3 issue slots having nearly the same results; and counterparts with out-of-order execution and retirement have substantial boost in performance. 
+
+It is important to state that proper handling between all types of data dependencies os demonstrated in all configurations as seen in the outputs found in Figure 6 through 17. 
+
 \section{Discussion}
+As stated before, Instruction Scheduling plays a crucial role in modern processors by maximizing the instruction throughput to minimize stalls and fully utilize the hardware. Techniques developed such as: out-of-order execution and register renaming; are one of the many that have managed to optimize instruction throughput to levels that allow for more efficient processors. The results in this project have demonstrated that proper instruction scheduling leads to higher throughput and better utilization of computational resources, making it essential for achieving peak performance in computing systems. 
 
 \end{document}
