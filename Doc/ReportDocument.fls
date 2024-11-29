@@ -331,6 +331,16 @@ INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/listings/lstlang1.sty
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/adobe/courier/pcrb7t.tfm
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/vf/adobe/courier/pcrb7t.vf
 INPUT /usr/local/texlive/2024/texmf-dist/fonts/tfm/adobe/courier/pcrb8r.tfm
+INPUT ./Images/Config1.png
+INPUT ./Images/Config1.png
+INPUT ./Images/Config1.png
+INPUT ./Images/Config1.png
+INPUT ./Images/Config1.png
+INPUT ./Images/Config1_Renaming.png
+INPUT ./Images/Config1_Renaming.png
+INPUT ./Images/Config1_Renaming.png
+INPUT ./Images/Config1_Renaming.png
+INPUT ./Images/Config1_Renaming.png
 INPUT ReportDocument.aux
 INPUT ./ReportDocument.out
 INPUT ./ReportDocument.out

@@ -26,7 +26,9 @@
 \tableofcontents
 \newpage
 \section{Introduction}
-Instruction scheduling plays a crucial role in moder computer architecture, especially for achieving high performance in multi-issue processors; they allow for faster instruction throughput. There are various techniques utilized in the industry to increase instruction throughput: register renaming and out-of-order execution are a few. Register renaming is the process of looking to resolve data dependencies between instructions by creating Register mapping rules that allow for the correct results of a program to be achieved at much faster speeds; and out-of-order execution is based on the principle of ``doesn't matter the route, what matters is getting there'' implying that as long as the end result remains consistent with the program order, instructions may be scheduled and retired in any order. 
+Instruction scheduling plays a crucial role in modern computer architecture, especially for achieving high performance in multi-issue processors; they allow for faster instruction throughput. There are various techniques utilized in the industry to increase instruction throughput: register renaming and out-of-order execution are a few. 
+
+Register renaming is the process of looking to resolve data dependencies between instructions by creating register mapping rules that allow for the correct results of a program to be achieved at much faster speeds; and out-of-order execution is based on the principle of ``doesn't matter the route, what matters is getting there'' implying that as long as the end result remains consistent with the program order, instructions may be scheduled and retired in any order. 
 
 This project aims to simulate the scheduling of `assembly' instructions under various processor configurations that look to exhibit the improvements in instruction throughput based on the techniques discussed before. The configurations developed in this project are the following:
 
@@ -527,6 +529,7 @@ We will first write the configuration and demonstrate the results for the class 
 
 I believe that this set of examples are enough to validate and verify that the simulation does provide proper behavior. These tests where only developed to demonstrate that the simulation was fruitful, and that it does achieve the prerequisites of this project. 
 
+\section{Tests}
 With this we can begin to look at all configurations handling an individual test, that contains the correct latencies of: ``+'', ``-'' take 1 cycle, ``*'' take 2 cycles, and ``LOAD'' and ``STORE'' instructions take 3; and that contains all sort of data dependencies without the need of worrying if it works properly and only analysing the improvement each configuration was able to achieve in regards of instruction throughput.
 
 The test that will be used to verify the relationship between the various techniques and instruction throughput is found in the ``test'' folder in the file ``instructions.asm''. This assembly ``program'' contains data dependencies between all types of instructions, testing the overall rigidness of this program and also demonstrating proper behavior. With this being said, let's look at the results for the following configurations (all with 4 functional units) both with and without register renaming.
@@ -541,6 +544,29 @@ The test that will be used to verify the relationship between the various techni
 \end{enumerate}
 
 \section{Results}
+This section contains screenshots of the results of simulating each of the aforementioned configurations. These results are only placed here to facilitate the visualization of outputs without the need to run the program for anyone reading this document or evaluating this project. Outputs will be placed for both register renaming (right) and no register renaming (left) version's of each configuration stated in the past section. 
+\begin{enumerate}
+    \item 1 issue slot, in-order 
+    \begin{figure}[H]
+        \centering 
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{Images/Config1.png}
+            \caption{1 issue slot, in-order configuration without register renaming.}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \centering 
+            \includegraphics[width=\textwidth]{Images/Config1_Renaming.png}
+            \caption{1 issue slot, in-order configuration with register renaming.}
+        \end{minipage}
+    \end{figure}
+    \item 1 issue slot, out-of-order issue and retirement 
+    \item 2 issue slots, in-order 
+    \item 2 issue slots, out-of-order issue and retirement 
+    \item 3 issue slot, in-order 
+    \item 3 issue slots, out-of-order issue and retirement 
+\end{enumerate}
 
 \section{Discussion}
 

@@ -24,11 +24,11 @@ class Instruction:
     # Method for retrieving instructions latencies 
     def latency(self):
         if self.op in ['+', '-']:
-            #return 1
-            return 2
-        elif self.op == '*':
+            return 1
             #return 2
-            return 3
+        elif self.op == '*':
+            return 2
+            #return 3
         elif self.op in ['LOAD', 'STORE']:
             return 3
         else:

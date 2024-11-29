@@ -83,7 +83,7 @@ def main():
         print("Input instructions:")
         for instr in instructions:
             scheduler.add_instruction(instr)
-            instr.print_instruction()
+            #instr.print_instruction()
 
         print("Results of Configuration:")
         # Schedule the instructions, print the results

@@ -8,8 +8,9 @@
 \contentsline {subsection}{\numberline {2.4}Instruction Scheduler Hierarchy}{5}{subsection.2.4}%
 \contentsline {subsubsection}{\numberline {2.4.1}Single-issue Instruction Scheduler Configurations}{7}{subsubsection.2.4.1}%
 \contentsline {subsubsection}{\numberline {2.4.2}Superscalar Instruction Scheduler Configurations}{8}{subsubsection.2.4.2}%
-\contentsline {paragraph}{In-Order Execution and Retirement}{8}{section*.3}%
+\contentsline {paragraph}{In-Order Execution and Retirement}{9}{section*.3}%
 \contentsline {paragraph}{Out of Order Execution and Retirement}{9}{section*.4}%
 \contentsline {section}{\numberline {3}Validation \& Verification}{11}{section.3}%
-\contentsline {section}{\numberline {4}Results}{15}{section.4}%
-\contentsline {section}{\numberline {5}Discussion}{15}{section.5}%
+\contentsline {section}{\numberline {4}Tests}{14}{section.4}%
+\contentsline {section}{\numberline {5}Results}{15}{section.5}%
+\contentsline {section}{\numberline {6}Discussion}{15}{section.6}%
