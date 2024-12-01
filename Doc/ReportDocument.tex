@@ -27,7 +27,7 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-    This project explores the design and implementation of advanced instruction scheduling techniques in modern superscalar and out-of-order processors. This document delves into a systematic methodologu, including the desing of in-order and out-of-order scheduling algorithms, dependency analysis, and resource arbitration mechanisms. 
+    This project explores the design and implementation of advanced instruction scheduling techniques in modern superscalar and out-of-order processors. This document delves into a systematic methodology, including the desing of in-order and out-of-order scheduling algorithms, dependency analysis, and resource arbitration mechanisms. 
     
     This document also justifies the behavior displayed by the simulations as correct through a set of examples that are compared. Results highlight the effectiveness of these techniques in mitigating stalls and enhancing instruction-level parallelism, supported by a comparative analysis of in-class case studies and experimental simulations.
     
@@ -51,7 +51,7 @@ This project aims to simulate the scheduling of `assembly' instructions under va
     \item Superscalar Instruction Scheduler (out of order) 
 \end{itemize}
 
-For each of this configurations there exists a version with register renaming and one without. In this project, we will simulate a the scheduling of a simple assembly instruction set, in each of these configurations. This configurations where developed with the help of the class presentations and personal understanding of programming.
+For each of these configurations there exists a version with register renaming and one without. In this project, we will simulate the scheduling of a simple assembly instruction set, in each of these configurations. These configurations were developed with the help of the class presentations and personal understanding of programming.
 
 Throughout this report document, we will be explaining the design, implementation details, test and results of each configuration. The insights gained will highlight the advantages and limitations of these techniques in processor architectures. 
 
@@ -68,7 +68,7 @@ The instruction scheduling simulation system is designed as a hierarchy of class
 The diagram in figure \ref{fig:ClassDiagram} encapsulates the logic that helped develop this simulation. In the following subsections, I will be explaining each class with code snippets and implementation to justify each of the components. Before, delving into the overall classes let's discuss the format of the assembly instructions. 
 
 \subsection{Assembly Format}
-The assembly format contained various properties that where expected from the simulation, and some that I saw fit. It can be explained with the following:
+The assembly format contains various properties that were expected from the simulation, and some that I believed were proper. The properties that made up the assembly format can be explained with the following:
 
 \begin{itemize}
     \item There are 8 fixed registers (R0 to R7) used in the assembly code
@@ -93,9 +93,9 @@ The Instruction Hierarchy is used to encompass methods and data that provide acc
     \item \lstinline|retired_cycle|: this property contained the actual cycle in which the instruction got retired by the processor configuration.
 \end{itemize}
 
-These properties where present in all types of instructions defined in the assembly format, the only work around done was that for `STORE' instructions filled the `destination register' with it's source register. Thus, leading to certain checks when handling dependencies.
+These properties were present in all types of instructions defined in the assembly format, the only work around done was that for `STORE' instructions filled the `destination register' with its source register. Thus, leading to certain checks when handling dependencies.
 
-The methods in this class, where used to extract information from the instructions themselves, so that the code would be less repeated. 
+The methods in this class, were used to extract information from the instructions themselves, so that the code would be less repeated. 
 
 \begin{itemize}
     \item \lstinline|print_instruction(self)|: abstract method in charge of printing instructions. This is used to print out each instruction in the command line.
@@ -110,14 +110,14 @@ This abstract class does not represent instructions as a whole. Instead they rep
 The \lstinline|ThreeRegInstruction| class contains two more properties: \lstinline|src1| and \lstinline|src2|; and defines the abstract methods with their desired behavior. These properties combined with the properties from the parent class \lstinline|Instruction| allow an instance to represent a Three Register Instruction such as: R1 = R2 + R3.
 
 \subsubsection{Load and Store Instructions}
-The \lstinline|LoadStoreInstruction| only defines the abstract methods from \lstinline|Instruction| allowing an instance of itself to represent a Load or a Store Instruction such as: R1 = STORE. Now that we understand the representation of instructions we may begin looking at how register renaming rules where implemented. 
+The \lstinline|LoadStoreInstruction| only defines the abstract methods from \lstinline|Instruction| allowing an instance of itself to represent a Load or a Store Instruction such as: R1 = STORE. Now that we understand the representation of instructions we may begin looking at how register renaming rules were implemented. 
 
 \subsection{Register Renaming Rules}
-Register renaming rules where implemented with a class that was a part of any processor configuration that contained the technique. The class was named \lstinline|RenamingRules| and it contained properties and methods in charge of handling, applying and removing renaming rules as the scheduling of a set of instructions took place. The properties it contained where as follows:
+Register renaming rules were implemented with a class that was a part of any processor configuration that contained the technique. The class was named \lstinline|RenamingRules| and it contained properties and methods in charge of handling, applying and removing renaming rules as the scheduling of a set of instructions took place. The properties it contained were as follows:
 
 \begin{itemize}
     \item \lstinline|rename_map|: this essentially a dictionary that relates a register from assembly (logical register) to a hidden register (physical register), like a rule relating the two. 
-    \item \lstinline|max_registers|: the maximum number of registers, this represents the physical registers that where used when applying the register renaming technique. Represented by registers such as: S0, S7, etc.
+    \item \lstinline|max_registers|: the maximum number of registers, this represents the physical registers that were used when applying the register renaming technique. Represented by registers such as: S0, S7, etc.
     \item \lstinline|available_physical_registers|: represent the remaning number of registers available for renaming based on the number of renaming rules currently in place. 
 \end{itemize}
 
@@ -169,7 +169,7 @@ Let's begin by looking at the list of all the properties that the classes in thi
 
 The properties stated aforementioned are combined in various ways to provide the information necessary to achieve the desired behavior of the instruction scheduler configurations stated in the beginning of this report document.
 
-The methods in this hierarchy are mostly different with a certain set of features that are the same for all. These features, como from overlapping behaviors and can be encapsulated in the following bulletpoints:
+The methods in this hierarchy are mostly different with a certain set of features that are the same for all. These features, come from overlapping behaviors and can be encapsulated in the following bulletpoints:
 
 \begin{itemize}
     \item \lstinline{add_instruction(self, instruction)}: this method is in charge of adding an instruction to \lstinline|instructions| of each instance. It is used to input the instruction set from the file.
@@ -180,7 +180,7 @@ The methods in this hierarchy are mostly different with a certain set of feature
         self.schedule()
         self._retire_instructions()
     \end{lstlisting}
-    \item \lstinline|_schedule_instruction(self, instr)|: this method is in charge of scheduling an instruction whenever called. This requieres the following logic: 
+    \item \lstinline|_schedule_instruction(self, instr)|: this method is in charge of scheduling an instruction whenever called. This requires the following logic: 
     \begin{lstlisting}[language=Python]
     def _schedule_instruction(self, instr : Instruction):
         instr.issue_cycle = self.current_cycle
@@ -188,7 +188,7 @@ The methods in this hierarchy are mostly different with a certain set of feature
         instr.started = True 
         self.instructions_in_progress.append(instr)
     \end{lstlisting}
-    Where some of the instruction's properties get modified, and the instruction being scheduled is added to the list of instructions in progress. 
+    Were some of the instruction's properties get modified, and the instruction being scheduled is added to the list of instructions in progress. 
     \item \lstinline|run(self)|: this method is in charge of repeatedly running cycles until all instructions have been processed. For most configurations it has this format:
     \begin{lstlisting}
     def run(self):
@@ -197,7 +197,7 @@ The methods in this hierarchy are mostly different with a certain set of feature
     \end{lstlisting}
 \end{itemize}
 
-The three items that where just described are consistent throughout all, but they don't contain the whole logic behind the instruction scheduling and instruction retiring. The core logic of this simulation is found in the \lstinline|schedule| and \lstinline|_retire_instructions| methods. As a quick description each configuration type (for both, with or without register renaming) has a different format for scheduling and retiring.
+The three items that were just described are consistent throughout all, but they don't contain the whole logic behind the instruction scheduling and instruction retiring. The core logic of this simulation is found in the \lstinline|schedule| and \lstinline|_retire_instructions| methods. As a quick description each configuration type (for both, with or without register renaming) has a different format for scheduling and retiring.
 
 \subsubsection{Single-issue Instruction Scheduler Configurations}
 Single-issue Instruction Scheduler configurations use in-order execution and retirement, this implies that both versions of this format use the same logic for instruction scheduling. The method in charge of this is the following:
@@ -212,7 +212,7 @@ def schedule(self):
             self.instructions.remove(instr) 
 \end{lstlisting}
 
-This version of the schedule logic is in charge of looking at the instruction list as a queue, where every cycle you can only check if you can schedule the oldest instruction. This method checks if there is space to schedule an instruction, and if there are remaining instructions to schedule. It only schedules instruction that are ready to execute. 
+This version of the schedule logic is in charge of looking at the instruction list as a queue, were every cycle you can only check if you can schedule the oldest instruction. This method checks if there is space to schedule an instruction, and if there are remaining instructions to schedule. It only schedules instruction that are ready to execute. 
 
 Being ready to execute implies checking data dependencies, and looking to resolve them when there is register renaming. Thus, implying that the difference between the two versions of Single-issue Instruction Scheduler's rellies on the checking if an instruction is ready to execute.
 
@@ -241,7 +241,7 @@ The methods stated above contain the logic for checking if there is a data depen
 
 The version with register renaming of this configurations has the same logical checks but with the difference that in the method \lstinline| __is_ready_to_execute(self, instruction)| we first update the source registers and check if the destination register implies the invalidation of a renaming rule, before checking for data dependencies. Also, any write-after data dependencies are solved with the creation of register renaming rules.
 
-Lastly, in-order instruction retirement is performed in the same manner for both versions of this configuration. Where we look to try and retire the in the First Come, First Retired order of a queue. This logic is defined in the following method:
+Lastly, in-order instruction retirement is performed in the same manner for both versions of this configuration. Were we look to try and retire in the order of First Come, First Retired like a queue. This logic is defined in the following method:
 
 \begin{lstlisting}[language=Python]
 def _retire_instructions(self): 
@@ -276,10 +276,10 @@ def schedule(self):
                 break
 \end{lstlisting}
 
-This method allows the behavior of a superscalar in-order instruction scheduler to be acheived. I decided to not explain the rest since we already have the explanation in the section before.
+This method allows the behavior of a superscalar in-order instruction scheduler to be achieved. I decided to not explain the rest since we already have the explanation in the section before.
 
 \paragraph{Out of Order Execution and Retirement}
-This set of configurations bring a lot of complexity to the equation. Since, these classes of configurations requiere instructions to be issued from both the list of pending instructions and the list of instructions. Thus, requiering two different types of checks. Before analysing the checks, we may begin by looking at how out of order execution is achieved.
+This family of configurations bring a lot of complexity to the equation. Since, these classes of configurations require instructions to be issued from both the list of pending instructions and the list of instructions. Thus, requiring two different types of checks. Before analysing the checks, we may begin by looking at how out of order execution is achieved.
 
 \begin{lstlisting}[language=Python]
 def schedule(self):
@@ -304,7 +304,7 @@ def schedule(self):
 
 The reasoning behind this method is that we attempt first instructions that have been overlooked (pending instructions), trying to see if the dependencies have already been resolved and we try to schedule them. And once we have tried all possible pending instructions we move on to issue as many new instructions as allowed by the number of issue slots; if new instructions can't be scheduled we overlook them. This process allows instructions to be executed out of order as long as no dependencies exist.
 
-The process of checking dependencies is similar to the ones mentioned before, with the exception that when we schedule instructions from the list of instructions we must check that there are no dependencies with all pending and in progress instructions. Meanwhile, when we process instructions from the list of pending instructions we must check that there are no dependencies with in-progress instructions or with instructions that where overlooked before the current one being processed. 
+The process of checking dependencies is similar to the ones mentioned before, with the exception that when we schedule instructions from the list of instructions we must check that there are no dependencies with all pending and in progress instructions. Meanwhile, when we process instructions from the list of pending instructions we must check that there are no dependencies with in-progress instructions or with instructions that were overlooked before the current one being processed. 
 
 The version of this configuration with \textbf{register renaming} does the same process of trying to resolve write-after data dependencies with both pending and in-progress instructions, considering the past constraint. Yet, source registers can only be updated by renaming rules when the instruction being processed comes from the original list of instructions.
 
@@ -366,6 +366,7 @@ The design demonstrates the logic utilized, but we need to visualize that the im
 \end{figure}
 
 We will first write the configuration and demonstrate the results for the class results in the left hand side and the screenshot of the results in my program.
+\newpage
 \begin{enumerate}
     \item Superscalar In-order Instruction Scheduler with 2 Issue Slots and No Register Renaming. This configuration is the one we studied for Case Study 1.
     \begin{figure}[H]
@@ -425,7 +426,7 @@ We will first write the configuration and demonstrate the results for the class 
         \end{minipage}
         \caption{Comparison of simulation results for the in-class case study 1 (left) and custom configuration (right).}
     \end{figure}
-    
+    \newpage
     \item Superscalar In-order Instruction Scheduler with 2 Issue Slots and Register Renaming. This is the configuration we studied for Case Study 2 in class. 
     \begin{figure}[H]
         \centering
@@ -482,7 +483,7 @@ We will first write the configuration and demonstrate the results for the class 
         \end{minipage}
         \caption{Comparison of simulation results for the in-class case study 2 (left) and custom configuration (right).}
     \end{figure}
-
+    \newpage
     \item Superscalar Out-of-order Instruction Scheduler with 2 Issue Slots and Register Renaming. This is the configuration we studied for Case Study 4 in class. 
     \begin{figure}[H]
         \centering
@@ -540,7 +541,7 @@ We will first write the configuration and demonstrate the results for the class 
     \end{figure}
 \end{enumerate}
 
-I believe that this set of examples are enough to validate and verify that the simulation does provide proper behavior. These tests where only developed to demonstrate that the simulation was fruitful, and that it does achieve the prerequisites of this project. 
+I believe that this set of examples are enough to validate and verify that the simulation does provide proper behavior. These tests were only developed to demonstrate that the simulation was fruitful, and that it does achieve the prerequisites of this project. 
 
 \section{Tests}
 With this we can begin to look at all configurations handling an individual test, that contains the correct latencies of: ``+'', ``-'' take 1 cycle, ``*'' take 2 cycles, and ``LOAD'' and ``STORE'' instructions take 3; and that contains all sort of data dependencies without the need of worrying if it works properly and only analysing the improvement each configuration was able to achieve in regards of instruction throughput.
@@ -656,11 +657,13 @@ This section contains screenshots of the results of simulating each of the afore
     \end{figure}
 \end{enumerate}
 
-The results found in the past enumerate demonstrate the overall behavior for combinations of configurations. Where out-of-order superscalar instruction scheduler's with renaming out perform all other configurations. Various concepts discussed in class such as how the `sweetspot' for issue slots was of 2 and that out-of-order execution improves instruction throughput have been proven. Similar counterparts of 2 and 3 issue slots having nearly the same results; and counterparts with out-of-order execution and retirement have substantial boost in performance. 
+The results found in the past enumerate demonstrate the overall behavior for combinations of configurations. Were out-of-order superscalar instruction scheduler's with renaming out perform all other configurations. Various concepts discussed in class such as how the `sweetspot' for issue slots was of 2 and that out-of-order execution improves instruction throughput have been proven. Similar counterparts of 2 and 3 issue slots having nearly the same results; and counterparts with out-of-order execution and retirement have substantial boost in performance. 
 
-It is important to state that proper handling between all types of data dependencies os demonstrated in all configurations as seen in the outputs found in Figure 6 through 17. 
+It is important to state that proper handling between all types of data dependencies is demonstrated in all configurations as seen in the outputs found in Figure 6 through 17. 
 
 \section{Discussion}
-As stated before, Instruction Scheduling plays a crucial role in modern processors by maximizing the instruction throughput to minimize stalls and fully utilize the hardware. Techniques developed such as: out-of-order execution and register renaming; are one of the many that have managed to optimize instruction throughput to levels that allow for more efficient processors. The results in this project have demonstrated that proper instruction scheduling leads to higher throughput and better utilization of computational resources, making it essential for achieving peak performance in computing systems. 
 
+Instruction scheduling is a cornerstone of modern processor design, aimed at maximizing instruction throughput, minimizing stalls, and fully utilizing hardware resources/ Advanced techniques such as out-of-order execution and register renaming have been pivotal in optimizing instruction throughput, enabling processors to operate more efficiently. 
+
+This project highlights the significant role of effective instruction scheduling in achieving more efficient processors. It demonstrates that the techniques studied in class, like: out-of-order execution and register renaming reduce idle cycles and resolve data dependencies dynamically, ensuring peak performance in computer systems; zooming into the critical importance of instruction scheduling in modern architectures. 
 \end{document}
