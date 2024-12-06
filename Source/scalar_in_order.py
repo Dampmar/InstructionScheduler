@@ -25,20 +25,30 @@ class SuperscalarInOrder(InstructionScheduler):
         return self.__check_dependencies(instruction) == DependencyType.NONE
 
     def __check_dependencies(self, instruction):
-        """Method in charge of checking data dependencies"""
         for instr in self.instructions_in_progress:
-            # RAW (read-after-write) Dependency Checking 
-            if (isinstance(instruction, ThreeRegInstruction)) and instr.dest in [instruction.src1, instruction.src2]:
-                return DependencyType.RAW
-            if instruction.op == "STORE" and instr.dest == instruction.dest:
-                return DependencyType.RAW
+            if instr == instruction:
+                return DependencyType.NONE
             
-            # WAR (write-after-read) Dependency Checking
-            if isinstance(instr, ThreeRegInstruction) and instruction.dest in [instr.src1, instr.src2]:
-                return DependencyType.WAW
+            if instr.op == 'STORE' and instruction.op == "STORE":
+                continue
+
+            # RAW Dependency Checking 
+            if isinstance(instruction, ThreeRegInstruction):
+                if instr.dest in [instruction.src1, instruction.src2] and instr.op !=  "STORE":
+                    return DependencyType.RAW
+            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
+                if instr.dest == instruction.dest:
+                    return DependencyType.RAW
             
-            # WAW (write-after-write) Dependency Checking
-            if instruction.dest == instr.dest:
+            # WAR Dependency Checking 
+            if isinstance(instr, ThreeRegInstruction): 
+                if instruction.dest in [instr.src1, instr.src2] and instruction.op != "STORE":
+                    return DependencyType.WAR
+            if instr.op == "STORE" and instr.dest == instruction.dest:
+                    return DependencyType.WAR
+            
+            # WAW Dependency Checking 
+            if instruction.op != "STORE" and instruction.dest == instr.dest:
                 return DependencyType.WAW
 
         return DependencyType.NONE

@@ -62,13 +62,16 @@ class SuperscalarOutOrder_Renaming(InstructionScheduler):
             if instr == instruction:
                 return DependencyType.NONE
             
+            if instr.op == 'STORE' and instruction.op == "STORE":
+                continue
+            
             # RAW Dependency (Read-After-Write), no solution
             if isinstance(instruction, ThreeRegInstruction):
-                if instr.dest in [instruction.src1, instruction.src2]:
+                if instr.dest in [instruction.src1, instruction.src2] and instr.op !=  "STORE":
                     return DependencyType.RAW
             
             # RAW Dependency (Store Edition), treat the 'dest' register as a source, no solution
-            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE" and instr.op != "STORE":
+            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
                 if instr.dest == instruction.dest:
                     return DependencyType.RAW
             

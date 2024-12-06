@@ -62,51 +62,38 @@ class SuperscalarOutOrder(InstructionScheduler):
             return False
         
         # Different Format since it should only check instructions that came before itself
-        for instr in self.pending_instructions:
-            if instr == instruction:
-                break
-            else:
-                # RAW Dependency Checking
-                if isinstance(instruction, ThreeRegInstruction):
-                    if instr.dest in [instruction.src1, instruction.src2]:
-                        return False
-                if isinstance(instr, LoadStoreInstruction) and instr.op == "STORE":
-                    if instr.dest == instruction.dest:
-                        return False
-                
-                # WAR Dependency Checking 
-                if isinstance(instr, ThreeRegInstruction):
-                    if instruction.dest in [instr.src1, instr.src2]:
-                        return False
-                if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
-                    if instr.dest == instruction.dest:
-                        return False
-                
-                # WAW Dependency Checking 
-                if instruction.dest == instr.dest:
-                    return False
+        if self.__check_dependencies(instruction, self.pending_instructions) != DependencyType.NONE:
+            return False
         
         return True
 
     # Check data dependencies between instruction and list of instructions
     def __check_dependencies(self, instruction, list_of_instructions):
         for instr in list_of_instructions:
-            # RAW Dependency Checking 
-            if isinstance(instruction, ThreeRegInstruction) and instr.dest in [instruction.src1, instruction.src2]:
-                return DependencyType.RAW
-            if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE" and instr.dest == instruction.dest:
-                return DependencyType.RAW
+            if instr == instruction:
+                return DependencyType.NONE
             
-            # WAR Dependency Checking 
-            if isinstance(instr, ThreeRegInstruction) and instruction.dest in [instr.src1, instr.src2]:
-                return DependencyType.WAR
+            if instr.op == 'STORE' and instruction.op == "STORE":
+                continue
+
+            # RAW Dependency Checking 
+            if isinstance(instruction, ThreeRegInstruction):
+                if instr.dest in [instruction.src1, instruction.src2] and instr.op !=  "STORE":
+                    return DependencyType.RAW
             if isinstance(instruction, LoadStoreInstruction) and instruction.op == "STORE":
                 if instr.dest == instruction.dest:
+                    return DependencyType.RAW
+            
+            # WAR Dependency Checking 
+            if isinstance(instr, ThreeRegInstruction): 
+                if instruction.dest in [instr.src1, instr.src2] and instruction.op != "STORE":
+                    return DependencyType.WAR
+            if instr.op == "STORE" and instr.dest == instruction.dest:
                     return DependencyType.WAR
             
             # WAW Dependency Checking 
-            if instruction.dest == instr.dest:
-                    return DependencyType.WAW
+            if instruction.op != "STORE" and instruction.dest == instr.dest:
+                return DependencyType.WAW
 
         return DependencyType.NONE
 

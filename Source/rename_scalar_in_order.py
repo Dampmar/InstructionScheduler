@@ -33,9 +33,11 @@ class SuperscalarInOrder_Renaming(InstructionScheduler):
     
     def __check_dependencies(self, instruction):
         for instr in self.instructions_in_progress:
+            if instr.op == 'STORE' and instruction.op == "STORE":
+                continue
             # RAW Dependency (Read-After-Write)
             if isinstance(instruction, ThreeRegInstruction):
-                if instr.dest in [instruction.src1, instruction.src2]:
+                if instr.dest in [instruction.src1, instruction.src2] and instr.op !=  "STORE":
                     return DependencyType.RAW
         
             # For STORE instructions, treat the 'dest' register as a source
@@ -50,6 +52,11 @@ class SuperscalarInOrder_Renaming(InstructionScheduler):
                         return DependencyType.WAR
                     else:
                         instruction.dest = self.renaming_rules.rename_map[instruction.dest]
+            if instr.op == "STORE" and instr.dest == instruction.dest and instruction.op != "STORE":
+                if not self.renaming_rules.create_rule(instruction.dest):
+                    return DependencyType.WAR
+                else:
+                    instruction.dest = self.renaming_rules.rename_map[instruction.dest]
         
             # WAW Dependency (Write-After-Write) - try to solve with renaming
             if instruction.op != "STORE" and instruction.dest == instr.dest:
